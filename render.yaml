@@ -16,5 +16,5 @@ services:
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        value: "postgresql://user:password@hostname:port/database"
+        value: "postgresql://aretechltd_db_user:QhJPDUdbBZeG5kjrl6nXjJUHdko9dSYJ@dpg-d2rkgtripnbc73d5g460-a.frankfurt-postgres.render.com/aretechltd_db"
     healthCheckPath: /health
