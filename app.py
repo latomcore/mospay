@@ -19,7 +19,11 @@ def create_app():
         app.config["TESTING"] = False
         # Production database configuration
         if os.environ.get("DATABASE_URL"):
-            app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+            raw_db_url = os.environ.get("DATABASE_URL")
+            # Ensure psycopg v3 driver is used
+            app.config["SQLALCHEMY_DATABASE_URI"] = raw_db_url.replace(
+                "postgresql://", "postgresql+psycopg://"
+            )
         # Production secret keys
         if os.environ.get("SECRET_KEY"):
             app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
