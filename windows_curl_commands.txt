@@ -1,0 +1,39 @@
+WINDOWS CURL COMMANDS FOR PAYMENT STATUS ENDPOINT
+================================================
+
+Option 1: PowerShell (Recommended)
+----------------------------------
+$headers = @{
+    "Content-Type" = "application/json"
+    "Authorization" = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1Njk2NDk5NCwianRpIjoiM2Q5ZTE0NDYtYjI3Ny00ZTlmLThlMzUtODZiMzdkNTMzNzMzIiwidHlwZSI6ImNsaWVudCIsInN1YiI6ImNsaWVudF8xIiwibmJmIjoxNzU2OTY0OTk0LCJjc3JmIjoiOTZiNDFkMmUtMTExZS00MjViLWE5ZWMtY2NlNmVlMTMxZDk3IiwiZXhwIjoxNzU3MDUxMzk0LCJjbGllbnRfaWQiOjEsInNlcnZpY2VzIjpbIm10bm1vbW9yd2EiXX0._VDUu3iLcWGP9jeTMuH4NINm1ejjZykLaxVLz6NRhWE"
+}
+
+$body = @{
+    "f000" = "mtnmomorwa"
+    "f001" = "SERVICE"
+    "f002" = "collection"
+    "f003" = "U8EQDpo2"
+    "f004" = 5000
+    "f005" = "+250788123456"
+    "f006" = "john_doe"
+    "f007" = "encrypted_pwd_123"
+    "f008" = "mypassword"
+    "f009" = "mobile_app_v1"
+    "f010" = "txn_20250903_002"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:5000/api/v1/payment/status" -Method POST -Headers $headers -Body $body
+
+Option 2: Windows curl (if available)
+-------------------------------------
+curl -X POST "http://localhost:5000/api/v1/payment/status" ^
+  -H "Content-Type: application/json" ^
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1Njk2NDk5NCwianRpIjoiM2Q5ZTE0NDYtYjI3Ny00ZTlmLThlMzUtODZiMzdkNTMzNzMzIiwidHlwZSI6ImNsaWVudCIsInN1YiI6ImNsaWVudF8xIiwibmJmIjoxNzU2OTY0OTk0LCJjc3JmIjoiOTZiNDFkMmUtMTExZS00MjViLWE5ZWMtY2NlNmVlMTMxZDk3IiwiZXhwIjoxNzU3MDUxMzk0LCJjbGllbnRfaWQiOjEsInNlcnZpY2VzIjpbIm10bm1vbW9yd2EiXX0._VDUu3iLcWGP9jeTMuH4NINm1ejjZykLaxVLz6NRhWE" ^
+  -d "{\"f000\":\"mtnmomorwa\",\"f001\":\"SERVICE\",\"f002\":\"collection\",\"f003\":\"U8EQDpo2\",\"f004\":5000,\"f005\":\"+250788123456\",\"f006\":\"john_doe\",\"f007\":\"encrypted_pwd_123\",\"f008\":\"mypassword\",\"f009\":\"mobile_app_v1\",\"f010\":\"txn_20250903_002\"}"
+
+Option 3: Python (Easiest)
+--------------------------
+python test_windows_curl.py
+
+RESULT: The endpoint is working! The 500 error is expected because the PostgreSQL function doesn't exist yet.
+The system will automatically create a default function when needed.

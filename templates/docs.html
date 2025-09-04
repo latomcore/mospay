@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="MosPay Payment Gateway - Complete API Documentation and Integration Guide">
+    <meta name="author" content="MosPay">
+
+    <title>MosPay Payment Gateway - API Documentation</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet"
+        type="text/css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
+
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css" rel="stylesheet">
+
+    <style>
+        .docs-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+        }
+
+        .api-endpoint {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .method-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .method-post {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .method-get {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .feature-card {
+            transition: transform 0.2s;
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .step-number {
+            background: #007bff;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+
+        .nav-docs {
+            position: sticky;
+            top: 2rem;
+        }
+
+        .nav-docs .nav-link {
+            color: #6c757d;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-docs .nav-link:hover,
+        .nav-docs .nav-link.active {
+            background-color: #e9ecef;
+            color: #007bff;
+        }
+    </style>
+</head>
+
+<body id="page-top">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-credit-card"></i> MosPay
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#overview">Overview</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#onboarding">Onboarding</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#authentication">Authentication</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#api-endpoints">API Endpoints</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#examples">Examples</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <div class="docs-header">
+        <div class="container text-center">
+            <h1 class="display-4 font-weight-bold mb-4">MosPay Payment Gateway</h1>
+            <p class="lead mb-4">Complete API Documentation and Integration Guide</p>
+            <p class="mb-0">Secure, reliable, and easy-to-integrate payment processing for your applications</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container my-5">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <div class="col-lg-3">
+                <div class="nav-docs">
+                    <h5 class="mb-3">Documentation</h5>
+                    <nav class="nav flex-column">
+                        <a class="nav-link" href="#overview">Overview</a>
+                        <a class="nav-link" href="#how-it-works">How It Works</a>
+                        <a class="nav-link" href="#onboarding">Client Onboarding</a>
+                        <a class="nav-link" href="#authentication">Authentication</a>
+                        <a class="nav-link" href="#api-endpoints">API Endpoints</a>
+                        <a class="nav-link" href="#examples">Code Examples</a>
+                        <a class="nav-link" href="#support">Support</a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <!-- Overview Section -->
+                <section id="overview" class="mb-5">
+                    <h2 class="mb-4">Overview</h2>
+                    <p class="lead">MosPay is a comprehensive payment gateway solution that enables businesses to
+                        process payments securely and efficiently through a simple REST API.</p>
+
+                    <div class="row mt-4">
+                        <div class="col-md-4 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                                    <h5>Secure</h5>
+                                    <p class="text-muted">Bank-grade security with JWT authentication and encrypted
+                                        communications.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-bolt fa-3x text-success mb-3"></i>
+                                    <h5>Fast</h5>
+                                    <p class="text-muted">Real-time payment processing with instant status updates and
+                                        notifications.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-cogs fa-3x text-info mb-3"></i>
+                                    <h5>Flexible</h5>
+                                    <p class="text-muted">Easy integration with comprehensive API documentation and
+                                        sample code.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- How It Works Section -->
+                <section id="how-it-works" class="mb-5">
+                    <h2 class="mb-4">How MosPay Works</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Architecture</h4>
+                            <p>MosPay operates on a microservices architecture with the following components:</p>
+                            <ul>
+                                <li><strong>API Gateway:</strong> Handles authentication and request routing</li>
+                                <li><strong>Payment Processor:</strong> Processes payment requests through PostgreSQL
+                                    functions</li>
+                                <li><strong>Transaction Manager:</strong> Tracks and manages transaction states</li>
+                                <li><strong>Notification System:</strong> Sends real-time updates via webhooks</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Payment Flow</h4>
+                            <ol>
+                                <li>Client authenticates and receives JWT token</li>
+                                <li>Payment request is submitted with transaction details</li>
+                                <li>MosPay processes payment through microservices</li>
+                                <li>Transaction status is updated in real-time</li>
+                                <li>Webhook notifications are sent to client's callback URL</li>
+                            </ol>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Onboarding Section -->
+                <section id="onboarding" class="mb-5">
+                    <h2 class="mb-4">Client Onboarding</h2>
+                    <p>To get started with MosPay, you need to become an approved client. Here's what you need to know:
+                    </p>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Requirements</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Business Information</h6>
+                                    <ul>
+                                        <li>Valid business registration</li>
+                                        <li>Company name and contact details</li>
+                                        <li>Business address and phone number</li>
+                                        <li>Contact person information</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Technical Requirements</h6>
+                                    <ul>
+                                        <li>HTTPS-enabled callback URL</li>
+                                        <li>Ability to handle webhook notifications</li>
+                                        <li>Secure storage of API credentials</li>
+                                        <li>Compliance with security best practices</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Onboarding Process</h5>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number">1</div>
+                            <div>
+                                <h6 class="mb-1">Submit Application</h6>
+                                <p class="text-muted mb-0">Contact our team with your business information and
+                                    integration requirements.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number">2</div>
+                            <div>
+                                <h6 class="mb-1">Review & Approval</h6>
+                                <p class="text-muted mb-0">Our team reviews your application and approves your client
+                                    account.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number">3</div>
+                            <div>
+                                <h6 class="mb-1">Account Setup</h6>
+                                <p class="text-muted mb-0">We create your account and assign you unique API credentials.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number">4</div>
+                            <div>
+                                <h6 class="mb-1">Integration & Testing</h6>
+                                <p class="text-muted mb-0">Integrate our API and test with our sandbox environment.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="step-number">5</div>
+                            <div>
+                                <h6 class="mb-1">Go Live</h6>
+                                <p class="text-muted mb-0">Once testing is complete, you're ready to process live
+                                    payments!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-4">
+                        <h6><i class="fas fa-info-circle"></i> Getting Started</h6>
+                        <p class="mb-0">Ready to get started? Contact our integration team at
+                            <strong>integrations@mospay.com</strong> or call <strong>+1 (555) 123-4567</strong> to begin
+                            your onboarding process.</p>
+                    </div>
+                </section>
+
+                <!-- Authentication Section -->
+                <section id="authentication" class="mb-5">
+                    <h2 class="mb-4">Authentication</h2>
+                    <p>MosPay uses a two-step authentication process for maximum security:</p>
+
+                    <div class="api-endpoint">
+                        <h5><span class="method-badge method-post">POST</span> /api/v1/auth/login</h5>
+                        <p class="mb-2">Authenticate with your API credentials to receive a JWT token.</p>
+                        <p class="text-muted mb-0"><strong>Headers:</strong> Authorization: Basic
+                            {base64(username:password)}</p>
+                    </div>
+
+                    <h4>Step 1: Get Access Token</h4>
+                    <div class="code-block">
+                        <pre><code class="language-bash">curl -X POST "https://api.mospay.com/api/v1/auth/login" \
+  -H "Authorization: Basic $(echo -n 'your_username:your_password' | base64)" \
+  -H "Content-Type: application/json"</code></pre>
+                    </div>
+
+                    <h4>Step 2: Use JWT Token</h4>
+                    <p>Include the JWT token in the Authorization header for all subsequent API calls:</p>
+                    <div class="code-block">
+                        <pre><code class="language-bash">curl -X POST "https://api.mospay.com/api/v1/payment/process" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "X-App-ID: YOUR_APP_ID"</code></pre>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Security Notes</h6>
+                        <ul class="mb-0">
+                            <li>Never expose your API credentials in client-side code</li>
+                            <li>Store credentials securely on your server</li>
+                            <li>JWT tokens expire after 24 hours</li>
+                            <li>Always use HTTPS for API communications</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- API Endpoints Section -->
+                <section id="api-endpoints" class="mb-5">
+                    <h2 class="mb-4">API Endpoints</h2>
+                    <p>MosPay provides three main API endpoints for payment processing:</p>
+
+                    <!-- Authentication Endpoint -->
+                    <div class="api-endpoint">
+                        <h5><span class="method-badge method-post">POST</span> /api/v1/auth/login</h5>
+                        <p class="mb-2">Authenticate and receive JWT token for API access.</p>
+                        <p class="text-muted mb-0"><strong>Response:</strong> JWT token with client permissions and
+                            service access.</p>
+                    </div>
+
+                    <!-- Payment Process Endpoint -->
+                    <div class="api-endpoint">
+                        <h5><span class="method-badge method-post">POST</span> /api/v1/payment/process</h5>
+                        <p class="mb-2">Process a new payment transaction.</p>
+                        <p class="text-muted mb-0"><strong>Headers:</strong> Authorization: Bearer {jwt_token},
+                            X-App-ID: {app_id}</p>
+                    </div>
+
+                    <!-- Payment Status Endpoint -->
+                    <div class="api-endpoint">
+                        <h5><span class="method-badge method-post">POST</span> /api/v1/payment/status</h5>
+                        <p class="mb-2">Check the status of an existing transaction.</p>
+                        <p class="text-muted mb-0"><strong>Headers:</strong> Authorization: Bearer {jwt_token},
+                            X-App-ID: {app_id}</p>
+                    </div>
+
+                    <h4 class="mt-4">Request Payload Format</h4>
+                    <p>All payment requests use a standardized payload format with fields f000 through f010:</p>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>f000</code></td>
+                                    <td>Service name (e.g., "mtnmomorwa")</td>
+                                    <td>String</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>f001</code></td>
+                                    <td>Action type ("SERVICE" for process, "BASE" for status)</td>
+                                    <td>String</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>f002</code></td>
+                                    <td>Route/command name (e.g., "collection")</td>
+                                    <td>String</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>f003</code></td>
+                                    <td>Your App ID</td>
+                                    <td>String</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>f004</code></td>
+                                    <td>Transaction amount (in smallest currency unit)</td>
+                                    <td>Number</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>f005</code></td>
+                                    <td>Mobile number</td>
+                                    <td>String</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>f006</code></td>
+                                    <td>Username/account identifier</td>
+                                    <td>String</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>f007</code></td>
+                                    <td>Encrypted password</td>
+                                    <td>String</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>f008</code></td>
+                                    <td>Plain password</td>
+                                    <td>String</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>f009</code></td>
+                                    <td>Device/app identifier</td>
+                                    <td>String</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>f010</code></td>
+                                    <td>Unique transaction ID</td>
+                                    <td>String</td>
+                                    <td>Yes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Examples Section -->
+                <section id="examples" class="mb-5">
+                    <h2 class="mb-4">Code Examples</h2>
+
+                    <h4>1. Authentication</h4>
+                    <div class="code-block">
+                        <pre><code class="language-bash"># Get JWT token
+curl -X POST "https://api.mospay.com/api/v1/auth/login" \
+  -H "Authorization: Basic $(echo -n 'your_username:your_password' | base64)" \
+  -H "Content-Type: application/json"
+
+# Response
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "Bearer",
+  "expires_in": 86400
+}</code></pre>
+                    </div>
+
+                    <h4>2. Process Payment</h4>
+                    <div class="code-block">
+                        <pre><code class="language-bash"># Process a payment
+curl -X POST "https://api.mospay.com/api/v1/payment/process" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "X-App-ID: YOUR_APP_ID" \
+  -d '{
+    "f000": "mtnmomorwa",
+    "f001": "SERVICE",
+    "f002": "collection",
+    "f003": "YOUR_APP_ID",
+    "f004": 5000,
+    "f005": "+250788123456",
+    "f006": "john_doe",
+    "f007": "encrypted_pwd_123",
+    "f008": "mypassword",
+    "f009": "mobile_app_v1",
+    "f010": "txn_20250104_001"
+  }'
+
+# Response
+{
+  "status": "200",
+  "type": "object",
+  "message": "Payment processed successfully",
+  "version": "1.0.0",
+  "action": "SERVICE",
+  "command": "collection",
+  "appName": "Your Company",
+  "serviceurl": "http://mtnmomorwa:8080/provider/api/collection",
+  "servicepayload": [
+    {"i": 0, "v": "YOUR_APP_ID"},
+    {"i": 1, "v": "Your Company"},
+    {"i": 2, "v": "Your Entity"},
+    {"i": 3, "v": "mtnmomorwa"},
+    {"i": 4, "v": "Your Country"}
+  ]
+}</code></pre>
+                    </div>
+
+                    <h4>3. Check Payment Status</h4>
+                    <div class="code-block">
+                        <pre><code class="language-bash"># Check payment status
+curl -X POST "https://api.mospay.com/api/v1/payment/status" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "X-App-ID: YOUR_APP_ID" \
+  -d '{
+    "f000": "mtnmomorwa",
+    "f001": "BASE",
+    "f002": "collectionStatus",
+    "f003": "YOUR_APP_ID",
+    "f004": 5000,
+    "f005": "+250788123456",
+    "f006": "john_doe",
+    "f007": "encrypted_pwd_123",
+    "f008": "mypassword",
+    "f009": "mobile_app_v1",
+    "f010": "txn_20250104_001"
+  }'
+
+# Response
+{
+  "status": "200",
+  "type": "object",
+  "message": "Transaction status retrieved",
+  "version": "1.0.0",
+  "action": "OUTPUT",
+  "command": "collectionStatus",
+  "appName": "Your Company",
+  "serviceurl": "N/A",
+  "servicepayload": [
+    {"i": 0, "v": "YOUR_APP_ID"},
+    {"i": 1, "v": "Your Company"},
+    {"i": 2, "v": "Your Entity"},
+    {"i": 3, "v": "mtnmomorwa"},
+    {"i": 4, "v": "Your Country"}
+  ],
+  "transaction_data": {
+    "unique_id": "txn_20250104_001",
+    "status": "completed",
+    "amount": 5000,
+    "mobile_number": "+250788123456",
+    "device_id": "mobile_app_v1",
+    "created_at": "2025-01-04T10:30:00Z",
+    "updated_at": "2025-01-04T10:31:00Z",
+    "request_payload": {...},
+    "response_payload": {...}
+  }
+}</code></pre>
+                    </div>
+
+                    <h4>Python Example</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import requests
+import base64
+import json
+
+# Configuration
+API_BASE_URL = "https://api.mospay.com/api/v1"
+USERNAME = "your_username"
+PASSWORD = "your_password"
+APP_ID = "your_app_id"
+
+# Step 1: Authenticate
+auth_string = f"{USERNAME}:{PASSWORD}"
+auth_bytes = auth_string.encode('ascii')
+auth_b64 = base64.b64encode(auth_bytes).decode('ascii')
+
+auth_response = requests.post(
+    f"{API_BASE_URL}/auth/login",
+    headers={
+        "Authorization": f"Basic {auth_b64}",
+        "Content-Type": "application/json"
+    }
+)
+
+if auth_response.status_code == 200:
+    token = auth_response.json()["access_token"]
+    
+    # Step 2: Process Payment
+    payment_payload = {
+        "f000": "mtnmomorwa",
+        "f001": "SERVICE",
+        "f002": "collection",
+        "f003": APP_ID,
+        "f004": 5000,
+        "f005": "+250788123456",
+        "f006": "john_doe",
+        "f007": "encrypted_pwd_123",
+        "f008": "mypassword",
+        "f009": "mobile_app_v1",
+        "f010": "txn_20250104_001"
+    }
+    
+    payment_response = requests.post(
+        f"{API_BASE_URL}/payment/process",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "X-App-ID": APP_ID
+        },
+        json=payment_payload
+    )
+    
+    print("Payment Response:", payment_response.json())
+else:
+    print("Authentication failed:", auth_response.text)</code></pre>
+                    </div>
+                </section>
+
+                <!-- Support Section -->
+                <section id="support" class="mb-5">
+                    <h2 class="mb-4">Support & Resources</h2>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-headset text-primary"></i> Technical Support</h5>
+                                    <p>Get help with integration and technical issues.</p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-envelope"></i> support@mospay.com</li>
+                                        <li><i class="fas fa-phone"></i> +1 (555) 123-4567</li>
+                                        <li><i class="fas fa-clock"></i> 24/7 Support Available</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-book text-success"></i> Resources</h5>
+                                    <p>Additional resources to help you succeed.</p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-file-pdf"></i> <a href="#">Integration Guide PDF</a></li>
+                                        <li><i class="fas fa-code"></i> <a href="#">SDK Downloads</a></li>
+                                        <li><i class="fas fa-video"></i> <a href="#">Video Tutorials</a></li>
+                                        <li><i class="fas fa-question-circle"></i> <a href="#">FAQ</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success mt-4">
+                        <h6><i class="fas fa-rocket"></i> Ready to Get Started?</h6>
+                        <p class="mb-0">Contact our integration team today to begin your MosPay journey. We're here to
+                            help you succeed!</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-credit-card"></i> MosPay</h5>
+                    <p class="mb-0">Secure payment processing for the modern web.</p>
+                </div>
+                <div class="col-md-6 text-md-right">
+                    <p class="mb-0">&copy; 2025 MosPay. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
+
+    <!-- Smooth scrolling -->
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor =>
+        {
+            anchor.addEventListener('click', function (e)
+            {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target)
+                {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Update active nav link on scroll
+        window.addEventListener('scroll', function ()
+        {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-docs .nav-link');
+
+            let current = '';
+            sections.forEach(section =>
+            {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= (sectionTop - 200))
+                {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link =>
+            {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current)
+                {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
