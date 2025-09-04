@@ -231,13 +231,69 @@ def dashboard():
 @admin.route("/clients")
 @admin_required
 def clients():
-    """List all clients"""
+    """List all clients with performance metrics"""
     try:
+        from datetime import datetime, timedelta
+        
         page = request.args.get("page", 1, type=int)
-        clients = Client.query.order_by(Client.created_at.desc()).paginate(
-            page=page, per_page=20, error_out=False
-        )
-        return render_template("admin/clients.html", clients=clients)
+        clients_query = Client.query.order_by(Client.created_at.desc())
+        
+        # Get basic client data with pagination
+        clients = clients_query.paginate(page=page, per_page=20, error_out=False)
+        
+        # Calculate performance metrics for each client
+        today = datetime.now().date()
+        last_30_days = today - timedelta(days=30)
+        last_7_days = today - timedelta(days=7)
+        
+        client_performance = []
+        for client in clients.items:
+            # Get transaction counts
+            total_transactions = Transaction.query.filter_by(client_id=client.id).count()
+            last_30d_transactions = Transaction.query.filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= last_30_days
+            ).count()
+            last_7d_transactions = Transaction.query.filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= last_7_days
+            ).count()
+            
+            # Get success rate (last 30 days)
+            successful_transactions = Transaction.query.filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= last_30_days,
+                Transaction.status == 'completed'
+            ).count()
+            
+            success_rate = (successful_transactions / last_30d_transactions * 100) if last_30d_transactions > 0 else 0
+            
+            # Get revenue (last 30 days)
+            revenue_30d = db.session.query(db.func.sum(Transaction.amount)).filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= last_30_days,
+                Transaction.status == 'completed'
+            ).scalar() or 0
+            
+            # Get last transaction date
+            last_transaction = Transaction.query.filter_by(client_id=client.id).order_by(
+                Transaction.created_at.desc()
+            ).first()
+            
+            client_performance.append({
+                'client': client,
+                'total_transactions': total_transactions,
+                'last_30d_transactions': last_30d_transactions,
+                'last_7d_transactions': last_7d_transactions,
+                'success_rate': round(success_rate, 1),
+                'revenue_30d': revenue_30d,
+                'last_transaction': last_transaction.created_at if last_transaction else None,
+                'is_active_recently': last_transaction.created_at >= (datetime.now() - timedelta(days=7)) if last_transaction else False
+            })
+        
+        return render_template("admin/clients.html", 
+                             clients=clients, 
+                             client_performance=client_performance)
     except Exception as e:
         flash(f"Error loading clients: {str(e)}", "error")
         return redirect(url_for("admin.dashboard"))
@@ -284,18 +340,108 @@ def new_client():
 @admin.route("/clients/<int:client_id>")
 @admin_required
 def view_client(client_id):
-    """View client details"""
+    """View client details with performance dashboard"""
     try:
+        from datetime import datetime, timedelta
+        
         client = Client.query.get_or_404(client_id)
-        transactions = (
-            Transaction.query.filter_by(client_id=client_id)
-            .order_by(Transaction.created_at.desc())
-            .limit(50)
-            .all()
-        )
-
+        services = Service.query.all()
+        client_services = ClientService.query.filter_by(client_id=client_id).all()
+        
+        # Performance metrics
+        today = datetime.now().date()
+        last_30_days = today - timedelta(days=30)
+        last_7_days = today - timedelta(days=7)
+        last_90_days = today - timedelta(days=90)
+        
+        # Transaction statistics
+        total_transactions = Transaction.query.filter_by(client_id=client_id).count()
+        last_30d_transactions = Transaction.query.filter(
+            Transaction.client_id == client_id,
+            db.func.date(Transaction.created_at) >= last_30_days
+        ).count()
+        last_7d_transactions = Transaction.query.filter(
+            Transaction.client_id == client_id,
+            db.func.date(Transaction.created_at) >= last_7_days
+        ).count()
+        
+        # Success rates
+        successful_30d = Transaction.query.filter(
+            Transaction.client_id == client_id,
+            db.func.date(Transaction.created_at) >= last_30_days,
+            Transaction.status == 'completed'
+        ).count()
+        
+        success_rate_30d = (successful_30d / last_30d_transactions * 100) if last_30d_transactions > 0 else 0
+        
+        # Revenue metrics
+        revenue_30d = db.session.query(db.func.sum(Transaction.amount)).filter(
+            Transaction.client_id == client_id,
+            db.func.date(Transaction.created_at) >= last_30_days,
+            Transaction.status == 'completed'
+        ).scalar() or 0
+        
+        revenue_7d = db.session.query(db.func.sum(Transaction.amount)).filter(
+            Transaction.client_id == client_id,
+            db.func.date(Transaction.created_at) >= last_7_days,
+            Transaction.status == 'completed'
+        ).scalar() or 0
+        
+        # Transaction trends (last 30 days)
+        daily_transactions = []
+        for i in range(30):
+            date = today - timedelta(days=i)
+            count = Transaction.query.filter(
+                Transaction.client_id == client_id,
+                db.func.date(Transaction.created_at) == date
+            ).count()
+            daily_transactions.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'count': count
+            })
+        daily_transactions.reverse()
+        
+        # Service usage breakdown
+        service_usage = db.session.query(
+            Service.name,
+            Service.display_name,
+            db.func.count(Transaction.id).label('count'),
+            db.func.sum(Transaction.amount).label('revenue')
+        ).join(Transaction, Service.id == Transaction.service_id).filter(
+            Transaction.client_id == client_id,
+            db.func.date(Transaction.created_at) >= last_30_days
+        ).group_by(Service.id, Service.name, Service.display_name).all()
+        
+        # Recent transactions
+        recent_transactions = Transaction.query.filter_by(
+            client_id=client_id
+        ).order_by(Transaction.created_at.desc()).limit(10).all()
+        
+        # Status breakdown
+        status_breakdown = db.session.query(
+            Transaction.status,
+            db.func.count(Transaction.id).label('count')
+        ).filter(
+            Transaction.client_id == client_id,
+            db.func.date(Transaction.created_at) >= last_30_days
+        ).group_by(Transaction.status).all()
+        
         return render_template(
-            "admin/view_client.html", client=client, transactions=transactions
+            "admin/view_client.html",
+            client=client,
+            services=services,
+            client_services=client_services,
+            # Performance data
+            total_transactions=total_transactions,
+            last_30d_transactions=last_30d_transactions,
+            last_7d_transactions=last_7d_transactions,
+            success_rate_30d=round(success_rate_30d, 1),
+            revenue_30d=revenue_30d,
+            revenue_7d=revenue_7d,
+            daily_transactions=daily_transactions,
+            service_usage=service_usage,
+            recent_transactions=recent_transactions,
+            status_breakdown=status_breakdown
         )
     except Exception as e:
         flash(f"Error loading client: {str(e)}", "error")

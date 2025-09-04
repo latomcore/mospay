@@ -20,6 +20,59 @@
 
     <!-- Custom styles for this template-->
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
+    
+    <!-- Chart.js for performance charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        .performance-metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .metric-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        .metric-change {
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .status-badge {
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+        }
+        .activity-timeline {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .timeline-item {
+            border-left: 3px solid #e3e6f0;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        .timeline-item.success {
+            border-left-color: #1cc88a;
+        }
+        .timeline-item.warning {
+            border-left-color: #f6c23e;
+        }
+        .timeline-item.danger {
+            border-left-color: #e74a3b;
+        }
+    </style>
 
 </head>
 
@@ -181,7 +234,7 @@
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Client Details</h1>
+                        <h1 class="h3 mb-0 text-gray-800">{{ client.company_name }} - Performance Dashboard</h1>
                         <div>
                             <a href="{{ url_for('admin.edit_client', client_id=client.id) }}"
                                 class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
@@ -191,6 +244,56 @@
                                 class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm ml-2">
                                 <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Clients
                             </a>
+                        </div>
+                    </div>
+
+                    <!-- Performance Metrics Overview -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="performance-metric-card">
+                                <div class="metric-value">{{ total_transactions }}</div>
+                                <div class="metric-label">Total Transactions</div>
+                                <div class="metric-change">{{ last_30d_transactions }} in last 30 days</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="performance-metric-card">
+                                <div class="metric-value">{{ success_rate_30d }}%</div>
+                                <div class="metric-label">Success Rate (30d)</div>
+                                <div class="metric-change">{{ last_7d_transactions }} transactions this week</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="performance-metric-card">
+                                <div class="metric-value">${{ "{:,.0f}".format(revenue_30d) }}</div>
+                                <div class="metric-label">Revenue (30d)</div>
+                                <div class="metric-change">${{ "{:,.0f}".format(revenue_7d) }} this week</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="performance-metric-card">
+                                <div class="metric-value">
+                                    {% if status_breakdown %}
+                                        {% for status in status_breakdown %}
+                                            {% if status.status == 'completed' %}
+                                                {{ status.count }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </div>
+                                <div class="metric-label">Completed (30d)</div>
+                                <div class="metric-change">
+                                    {% if status_breakdown %}
+                                        {% for status in status_breakdown %}
+                                            {% if status.status == 'pending' %}
+                                                {{ status.count }} pending
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -411,6 +514,111 @@
                         </div>
                     </div>
 
+                    <!-- Performance Charts Row -->
+                    <div class="row">
+                        <!-- Transaction Volume Chart -->
+                        <div class="col-xl-8 col-lg-7">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Transaction Volume (Last 30 Days)</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="transactionVolumeChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Service Usage Chart -->
+                        <div class="col-xl-4 col-lg-5">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Service Usage (30d)</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="serviceUsageChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Row -->
+                    <div class="row">
+                        <!-- Status Breakdown -->
+                        <div class="col-xl-6 col-lg-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Transaction Status Breakdown (30d)</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if status_breakdown %}
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Status</th>
+                                                    <th>Count</th>
+                                                    <th>Percentage</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for status in status_breakdown %}
+                                                <tr>
+                                                    <td>
+                                                        <span class="badge badge-{{ 'success' if status.status == 'completed' else 'warning' if status.status == 'pending' else 'danger' }} status-badge">
+                                                            {{ status.status|title }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ status.count }}</td>
+                                                    <td>{{ "%.1f"|format((status.count / last_30d_transactions * 100) if last_30d_transactions > 0 else 0) }}%</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">No transaction data available</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="col-xl-6 col-lg-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="activity-timeline">
+                                        {% if recent_transactions %}
+                                        {% for transaction in recent_transactions %}
+                                        <div class="timeline-item {{ 'success' if transaction.status == 'completed' else 'warning' if transaction.status == 'pending' else 'danger' }}">
+                                            <div class="small text-gray-500">{{ transaction.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                                            <div class="font-weight-bold">{{ transaction.unique_id[:12] }}...</div>
+                                            <div class="small text-gray-600">{{ transaction.service.display_name }}</div>
+                                            <div class="small">
+                                                <span class="badge badge-{{ 'success' if transaction.status == 'completed' else 'warning' if transaction.status == 'pending' else 'danger' }}">
+                                                    {{ transaction.status }}
+                                                </span>
+                                                {% if transaction.amount %}
+                                                <span class="text-muted">${{ "{:,.2f}".format(transaction.amount) }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                        {% else %}
+                                        <p class="text-muted">No recent transactions</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <!-- /.container-fluid -->
 
@@ -487,6 +695,81 @@
             }
         }
 
+        // Client Performance Charts
+        // Transaction Volume Chart
+        const transactionCtx = document.getElementById('transactionVolumeChart').getContext('2d');
+        const transactionChart = new Chart(transactionCtx, {
+            type: 'line',
+            data: {
+                labels: [
+                    {% for day in daily_transactions %}
+                    '{{ day.date }}'{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'Transactions',
+                    data: [
+                        {% for day in daily_transactions %}
+                        {{ day.count }}{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Service Usage Chart
+        const serviceCtx = document.getElementById('serviceUsageChart').getContext('2d');
+        const serviceChart = new Chart(serviceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    {% for service in service_usage %}
+                    '{{ service.display_name }}'{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for service in service_usage %}
+                        {{ service.count }}{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        '#4e73df',
+                        '#1cc88a',
+                        '#36b9cc',
+                        '#f6c23e',
+                        '#e74a3b'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
 
     </script>
 
