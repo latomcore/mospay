@@ -1619,6 +1619,9 @@ def bulk_export_transactions():
         import io
         from flask import make_response
         
+        # Debug logging
+        print(f"[BULK EXPORT] Form data received: {request.form}")
+        
         # Get export parameters
         client_ids = request.form.getlist("client_ids")
         service_ids = request.form.getlist("service_ids")
@@ -1626,6 +1629,8 @@ def bulk_export_transactions():
         start_date = request.form.get("start_date")
         end_date = request.form.get("end_date")
         export_format = request.form.get("export_format", "csv")
+        
+        print(f"[BULK EXPORT] Parameters: client_ids={client_ids}, service_ids={service_ids}, statuses={statuses}, start_date={start_date}, end_date={end_date}")
         
         # Build query
         query = Transaction.query
@@ -1662,6 +1667,7 @@ def bulk_export_transactions():
         
         # Get all transactions
         transactions = query.all()
+        print(f"[BULK EXPORT] Found {len(transactions)} transactions to export")
         
         if export_format == "csv":
             return _export_transactions_csv(transactions, client_ids, start_date, end_date)
@@ -1680,6 +1686,8 @@ def _export_transactions_csv(transactions, client_ids, start_date, end_date):
     import io
     from flask import make_response
     from datetime import datetime
+    
+    print(f"[CSV EXPORT] Starting CSV export for {len(transactions)} transactions")
     
     output = io.StringIO()
     writer = csv.writer(output)
@@ -1738,6 +1746,8 @@ def bulk_export_clients():
         import csv
         import io
         from flask import make_response
+        
+        print("[CLIENT EXPORT] Starting client export")
         
         # Get all active clients
         clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
