@@ -1586,6 +1586,28 @@ def check_alerts():
     return redirect(url_for("admin.alerts"))
 
 
+# Test route for debugging
+@admin.route("/test-export")
+@admin_required
+def test_export():
+    """Test route to check export functionality"""
+    try:
+        # Test basic queries
+        clients_count = Client.query.count()
+        transactions_count = Transaction.query.count()
+        
+        return jsonify({
+            'clients_count': clients_count,
+            'transactions_count': transactions_count,
+            'message': 'Export test successful'
+        })
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'message': 'Export test failed'
+        }), 500
+
+
 # Bulk Export & Reporting
 @admin.route("/bulk-export")
 @admin_required
@@ -1700,17 +1722,32 @@ def _export_transactions_csv(transactions, client_ids, start_date, end_date):
     
     # Write data
     for transaction in transactions:
-        writer.writerow([
-            transaction.unique_id,
-            transaction.client.company_name,
-            transaction.service.display_name,
-            transaction.status,
-            transaction.amount or '',
-            transaction.mobile_number or '',
-            transaction.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            transaction.updated_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.updated_at else '',
-            transaction.client.app_id
-        ])
+        try:
+            writer.writerow([
+                transaction.unique_id or '',
+                transaction.client.company_name if transaction.client else 'Unknown Client',
+                transaction.service.display_name if transaction.service else 'Unknown Service',
+                transaction.status or '',
+                transaction.amount or '',
+                transaction.mobile_number or '',
+                transaction.created_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.created_at else '',
+                transaction.updated_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.updated_at else '',
+                transaction.client.app_id if transaction.client else ''
+            ])
+        except Exception as e:
+            print(f"[CSV EXPORT] Error writing transaction {transaction.id}: {str(e)}")
+            # Write a row with error info
+            writer.writerow([
+                transaction.unique_id or 'ERROR',
+                'ERROR',
+                'ERROR', 
+                'ERROR',
+                'ERROR',
+                'ERROR',
+                'ERROR',
+                'ERROR',
+                'ERROR'
+            ])
     
     output.seek(0)
     response = make_response(output.getvalue())
