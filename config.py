@@ -8,10 +8,12 @@ class Config:
     )
 
     # Database configuration
-    SQLALCHEMY_DATABASE_URI = (
+    DATABASE_URL = (
         os.environ.get("DATABASE_URL")
         or "postgresql://aretechltd_db_user:QhJPDUdbBZeG5kjrl6nXjJUHdko9dSYJ@dpg-d2rkgtripnbc73d5g460-a.frankfurt-postgres.render.com:5432/aretechltd_db"
     )
+    # Convert postgresql:// to postgresql+psycopg:// for psycopg v3
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Database connection pooling and retry settings
