@@ -18,6 +18,8 @@ from models import (
     ClientService,
     Transaction,
     ApiLog,
+    Alert,
+    AlertRule,
 )
 from auth import admin_required, super_admin_required
 from auth import generate_app_id, generate_api_credentials
@@ -1243,3 +1245,218 @@ def client_transactions_api(client_id):
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# Alert Management
+@admin.route("/alerts")
+@admin_required
+def alerts():
+    """List all alerts with filtering"""
+    try:
+        from datetime import datetime, timedelta
+        
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 25, type=int)
+        
+        # Filter parameters
+        status = request.args.get("status", "")
+        severity = request.args.get("severity", "")
+        alert_type = request.args.get("alert_type", "")
+        client_id = request.args.get("client_id", type=int)
+        
+        # Build query
+        query = Alert.query
+        
+        if status:
+            query = query.filter(Alert.status == status)
+        if severity:
+            query = query.filter(Alert.severity == severity)
+        if alert_type:
+            query = query.filter(Alert.alert_type == alert_type)
+        if client_id:
+            query = query.filter(Alert.client_id == client_id)
+        
+        # Order by creation date (newest first)
+        query = query.order_by(Alert.created_at.desc())
+        
+        # Paginate results
+        alerts = query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        # Get filter options
+        clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        
+        return render_template(
+            "admin/alerts.html",
+            alerts=alerts,
+            clients=clients,
+            current_filters={
+                'status': status,
+                'severity': severity,
+                'alert_type': alert_type,
+                'client_id': client_id,
+                'per_page': per_page
+            }
+        )
+        
+    except Exception as e:
+        flash(f"Error loading alerts: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/alerts/<int:alert_id>/acknowledge", methods=["POST"])
+@admin_required
+def acknowledge_alert(alert_id):
+    """Acknowledge an alert"""
+    try:
+        from alert_monitor import alert_monitor
+        
+        user_id = session.get('user_id')
+        if alert_monitor.acknowledge_alert(alert_id, user_id):
+            flash("Alert acknowledged successfully", "success")
+        else:
+            flash("Error acknowledging alert", "error")
+            
+    except Exception as e:
+        flash(f"Error acknowledging alert: {str(e)}", "error")
+    
+    return redirect(url_for("admin.alerts"))
+
+
+@admin.route("/alerts/<int:alert_id>/resolve", methods=["POST"])
+@admin_required
+def resolve_alert(alert_id):
+    """Resolve an alert"""
+    try:
+        from alert_monitor import alert_monitor
+        
+        user_id = session.get('user_id')
+        if alert_monitor.resolve_alert(alert_id, user_id):
+            flash("Alert resolved successfully", "success")
+        else:
+            flash("Error resolving alert", "error")
+            
+    except Exception as e:
+        flash(f"Error resolving alert: {str(e)}", "error")
+    
+    return redirect(url_for("admin.alerts"))
+
+
+@admin.route("/alert-rules")
+@admin_required
+def alert_rules():
+    """List all alert rules"""
+    try:
+        page = request.args.get("page", 1, type=int)
+        rules = AlertRule.query.order_by(AlertRule.created_at.desc()).paginate(
+            page=page, per_page=20, error_out=False
+        )
+        
+        clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        
+        return render_template("admin/alert_rules.html", rules=rules, clients=clients)
+        
+    except Exception as e:
+        flash(f"Error loading alert rules: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/alert-rules/new", methods=["GET", "POST"])
+@admin_required
+def new_alert_rule():
+    """Create new alert rule"""
+    if request.method == "POST":
+        try:
+            rule = AlertRule(
+                name=request.form.get("name"),
+                description=request.form.get("description"),
+                alert_type=request.form.get("alert_type"),
+                metric=request.form.get("metric"),
+                threshold_value=float(request.form.get("threshold_value")),
+                threshold_operator=request.form.get("threshold_operator"),
+                time_window=int(request.form.get("time_window")),
+                is_active=bool(request.form.get("is_active")),
+                client_id=int(request.form.get("client_id")) if request.form.get("client_id") else None
+            )
+            
+            db.session.add(rule)
+            db.session.commit()
+            
+            flash("Alert rule created successfully", "success")
+            return redirect(url_for("admin.alert_rules"))
+            
+        except Exception as e:
+            flash(f"Error creating alert rule: {str(e)}", "error")
+    
+    clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+    return render_template("admin/new_alert_rule.html", clients=clients)
+
+
+@admin.route("/alert-rules/<int:rule_id>/edit", methods=["GET", "POST"])
+@admin_required
+def edit_alert_rule(rule_id):
+    """Edit alert rule"""
+    rule = AlertRule.query.get_or_404(rule_id)
+    
+    if request.method == "POST":
+        try:
+            rule.name = request.form.get("name")
+            rule.description = request.form.get("description")
+            rule.alert_type = request.form.get("alert_type")
+            rule.metric = request.form.get("metric")
+            rule.threshold_value = float(request.form.get("threshold_value"))
+            rule.threshold_operator = request.form.get("threshold_operator")
+            rule.time_window = int(request.form.get("time_window"))
+            rule.is_active = bool(request.form.get("is_active"))
+            rule.client_id = int(request.form.get("client_id")) if request.form.get("client_id") else None
+            
+            db.session.commit()
+            
+            flash("Alert rule updated successfully", "success")
+            return redirect(url_for("admin.alert_rules"))
+            
+        except Exception as e:
+            flash(f"Error updating alert rule: {str(e)}", "error")
+    
+    clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+    return render_template("admin/edit_alert_rule.html", rule=rule, clients=clients)
+
+
+@admin.route("/alert-rules/<int:rule_id>/delete", methods=["POST"])
+@admin_required
+def delete_alert_rule(rule_id):
+    """Delete alert rule"""
+    try:
+        rule = AlertRule.query.get_or_404(rule_id)
+        db.session.delete(rule)
+        db.session.commit()
+        
+        flash("Alert rule deleted successfully", "success")
+        
+    except Exception as e:
+        flash(f"Error deleting alert rule: {str(e)}", "error")
+    
+    return redirect(url_for("admin.alert_rules"))
+
+
+@admin.route("/monitoring/check-alerts", methods=["POST"])
+@admin_required
+def check_alerts():
+    """Manually trigger alert checking"""
+    try:
+        from alert_monitor import alert_monitor
+        
+        alerts_created = alert_monitor.check_all_rules()
+        
+        if alerts_created:
+            flash(f"Alert check completed. {len(alerts_created)} new alerts created.", "success")
+        else:
+            flash("Alert check completed. No new alerts created.", "info")
+            
+    except Exception as e:
+        flash(f"Error checking alerts: {str(e)}", "error")
+    
+    return redirect(url_for("admin.alerts"))
