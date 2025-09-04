@@ -394,8 +394,8 @@
                                                 <h6>Today's Transactions</h6>
                                                 <p class="small text-muted">Export all transactions from today</p>
                                                 <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
-                                                    <input type="hidden" name="start_date" value="{{ moment().format('YYYY-MM-DD') }}">
-                                                    <input type="hidden" name="end_date" value="{{ moment().format('YYYY-MM-DD') }}">
+                                                    <input type="hidden" name="start_date" value="" id="today_start">
+                                                    <input type="hidden" name="end_date" value="" id="today_end">
                                                     <button type="submit" class="btn btn-outline-primary btn-sm">
                                                         <i class="fas fa-download"></i> Export
                                                     </button>
@@ -408,8 +408,8 @@
                                                 <h6>Last 7 Days</h6>
                                                 <p class="small text-muted">Export transactions from the past week</p>
                                                 <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
-                                                    <input type="hidden" name="start_date" value="{{ moment().subtract(7, 'days').format('YYYY-MM-DD') }}">
-                                                    <input type="hidden" name="end_date" value="{{ moment().format('YYYY-MM-DD') }}">
+                                                    <input type="hidden" name="start_date" value="" id="week_start">
+                                                    <input type="hidden" name="end_date" value="" id="week_end">
                                                     <button type="submit" class="btn btn-outline-success btn-sm">
                                                         <i class="fas fa-download"></i> Export
                                                     </button>
@@ -422,8 +422,8 @@
                                                 <h6>Last 30 Days</h6>
                                                 <p class="small text-muted">Export transactions from the past month</p>
                                                 <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
-                                                    <input type="hidden" name="start_date" value="{{ moment().subtract(30, 'days').format('YYYY-MM-DD') }}">
-                                                    <input type="hidden" name="end_date" value="{{ moment().format('YYYY-MM-DD') }}">
+                                                    <input type="hidden" name="start_date" value="" id="month_start">
+                                                    <input type="hidden" name="end_date" value="" id="month_end">
                                                     <button type="submit" class="btn btn-outline-info btn-sm">
                                                         <i class="fas fa-download"></i> Export
                                                     </button>
@@ -480,23 +480,17 @@
             const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
             const lastMonth = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
             
-            // Update quick export forms with actual dates
-            const quickForms = document.querySelectorAll('form[action*="bulk_export_transactions"]');
-            quickForms.forEach((form, index) => {
-                const startDateInput = form.querySelector('input[name="start_date"]');
-                const endDateInput = form.querySelector('input[name="end_date"]');
-                
-                if (index === 0) { // Today
-                    startDateInput.value = today;
-                    endDateInput.value = today;
-                } else if (index === 1) { // Last 7 days
-                    startDateInput.value = lastWeek;
-                    endDateInput.value = today;
-                } else if (index === 2) { // Last 30 days
-                    startDateInput.value = lastMonth;
-                    endDateInput.value = today;
-                }
-            });
+            // Set today's dates
+            document.getElementById('today_start').value = today;
+            document.getElementById('today_end').value = today;
+            
+            // Set last 7 days dates
+            document.getElementById('week_start').value = lastWeek;
+            document.getElementById('week_end').value = today;
+            
+            // Set last 30 days dates
+            document.getElementById('month_start').value = lastMonth;
+            document.getElementById('month_end').value = today;
         });
     </script>
 
