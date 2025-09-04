@@ -1584,3 +1584,318 @@ def check_alerts():
         flash(f"Error checking alerts: {str(e)}", "error")
 
     return redirect(url_for("admin.alerts"))
+
+
+# Bulk Export & Reporting
+@admin.route("/bulk-export")
+@admin_required
+def bulk_export():
+    """Bulk export interface for multiple clients"""
+    try:
+        clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        services = Service.query.order_by(Service.display_name).all()
+        
+        # Get unique statuses
+        statuses = db.session.query(Transaction.status).distinct().all()
+        status_options = [status[0] for status in statuses if status[0]]
+        
+        return render_template("admin/bulk_export.html", 
+                             clients=clients, 
+                             services=services, 
+                             status_options=status_options)
+        
+    except Exception as e:
+        flash(f"Error loading bulk export page: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/bulk-export/transactions", methods=["POST"])
+@admin_required
+def bulk_export_transactions():
+    """Export transactions for multiple clients"""
+    try:
+        from datetime import datetime, timedelta
+        import csv
+        import io
+        from flask import make_response
+        
+        # Get export parameters
+        client_ids = request.form.getlist("client_ids")
+        service_ids = request.form.getlist("service_ids")
+        statuses = request.form.getlist("statuses")
+        start_date = request.form.get("start_date")
+        end_date = request.form.get("end_date")
+        export_format = request.form.get("export_format", "csv")
+        
+        # Build query
+        query = Transaction.query
+        
+        # Apply client filter
+        if client_ids:
+            query = query.filter(Transaction.client_id.in_(client_ids))
+        
+        # Apply service filter
+        if service_ids:
+            query = query.filter(Transaction.service_id.in_(service_ids))
+        
+        # Apply status filter
+        if statuses:
+            query = query.filter(Transaction.status.in_(statuses))
+        
+        # Apply date filters
+        if start_date:
+            try:
+                start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
+                query = query.filter(Transaction.created_at >= start_datetime)
+            except ValueError:
+                pass
+        
+        if end_date:
+            try:
+                end_datetime = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+                query = query.filter(Transaction.created_at < end_datetime)
+            except ValueError:
+                pass
+        
+        # Order by creation date
+        query = query.order_by(Transaction.created_at.desc())
+        
+        # Get all transactions
+        transactions = query.all()
+        
+        if export_format == "csv":
+            return _export_transactions_csv(transactions, client_ids, start_date, end_date)
+        else:
+            flash("Unsupported export format", "error")
+            return redirect(url_for("admin.bulk_export"))
+            
+    except Exception as e:
+        flash(f"Error exporting transactions: {str(e)}", "error")
+        return redirect(url_for("admin.bulk_export"))
+
+
+def _export_transactions_csv(transactions, client_ids, start_date, end_date):
+    """Helper function to export transactions as CSV"""
+    import csv
+    import io
+    from flask import make_response
+    from datetime import datetime
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow([
+        'Transaction ID', 'Client', 'Service', 'Status', 'Amount', 
+        'Mobile Number', 'Created At', 'Updated At', 'Client App ID'
+    ])
+    
+    # Write data
+    for transaction in transactions:
+        writer.writerow([
+            transaction.unique_id,
+            transaction.client.company_name,
+            transaction.service.display_name,
+            transaction.status,
+            transaction.amount or '',
+            transaction.mobile_number or '',
+            transaction.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            transaction.updated_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.updated_at else '',
+            transaction.client.app_id
+        ])
+    
+    output.seek(0)
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv'
+    
+    # Generate filename
+    filename_parts = ['transactions_export']
+    if client_ids and len(client_ids) == 1:
+        client = Client.query.get(client_ids[0])
+        if client:
+            filename_parts.append(client.company_name.replace(' ', '_'))
+    elif len(client_ids) > 1:
+        filename_parts.append(f'{len(client_ids)}_clients')
+    
+    if start_date:
+        filename_parts.append(f'from_{start_date}')
+    if end_date:
+        filename_parts.append(f'to_{end_date}')
+    
+    filename_parts.append(datetime.now().strftime('%Y%m%d_%H%M%S'))
+    filename = '_'.join(filename_parts) + '.csv'
+    
+    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+    return response
+
+
+@admin.route("/bulk-export/clients")
+@admin_required
+def bulk_export_clients():
+    """Export client data with performance metrics"""
+    try:
+        from datetime import datetime, timedelta
+        import csv
+        import io
+        from flask import make_response
+        
+        # Get all active clients
+        clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        
+        # Calculate performance metrics for each client
+        today = datetime.now().date()
+        last_30_days = today - timedelta(days=30)
+        last_7_days = today - timedelta(days=7)
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow([
+            'Client ID', 'Company Name', 'Contact Person', 'Email', 'Phone',
+            'App ID', 'API Username', 'Is Active', 'Created At',
+            'Total Transactions', 'Last 30d Transactions', 'Last 7d Transactions',
+            'Success Rate (30d)', 'Revenue (30d)', 'Last Transaction Date',
+            'Callback URL'
+        ])
+        
+        # Write data
+        for client in clients:
+            # Get transaction counts
+            total_transactions = Transaction.query.filter_by(client_id=client.id).count()
+            last_30d_transactions = Transaction.query.filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= last_30_days
+            ).count()
+            last_7d_transactions = Transaction.query.filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= last_7d_transactions
+            ).count()
+            
+            # Get success rate (last 30 days)
+            successful_transactions = Transaction.query.filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= last_30_days,
+                Transaction.status == 'completed'
+            ).count()
+            
+            success_rate = (successful_transactions / last_30d_transactions * 100) if last_30d_transactions > 0 else 0
+            
+            # Get revenue (last 30 days)
+            revenue_30d = db.session.query(db.func.sum(Transaction.amount)).filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= last_30_days,
+                Transaction.status == 'completed'
+            ).scalar() or 0
+            
+            # Get last transaction date
+            last_transaction = Transaction.query.filter_by(client_id=client.id).order_by(
+                Transaction.created_at.desc()
+            ).first()
+            
+            writer.writerow([
+                client.id,
+                client.company_name,
+                client.contact_person,
+                client.email,
+                client.phone,
+                client.app_id,
+                client.api_username,
+                'Yes' if client.is_active else 'No',
+                client.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                total_transactions,
+                last_30d_transactions,
+                last_7d_transactions,
+                f"{success_rate:.1f}%",
+                f"${revenue_30d:.2f}",
+                last_transaction.created_at.strftime('%Y-%m-%d %H:%M:%S') if last_transaction else '',
+                client.callback_url or ''
+            ])
+        
+        output.seek(0)
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'text/csv'
+        response.headers['Content-Disposition'] = f'attachment; filename=clients_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        return response
+        
+    except Exception as e:
+        flash(f"Error exporting clients: {str(e)}", "error")
+        return redirect(url_for("admin.bulk_export"))
+
+
+@admin.route("/reports/performance-summary")
+@admin_required
+def performance_summary_report():
+    """Generate performance summary report"""
+    try:
+        from datetime import datetime, timedelta
+        
+        # Get date range (default to last 30 days)
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=30)
+        
+        # Get all active clients
+        clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        
+        # Calculate summary statistics
+        total_clients = len(clients)
+        total_transactions = Transaction.query.filter(
+            db.func.date(Transaction.created_at) >= start_date
+        ).count()
+        
+        successful_transactions = Transaction.query.filter(
+            db.func.date(Transaction.created_at) >= start_date,
+            Transaction.status == 'completed'
+        ).count()
+        
+        overall_success_rate = (successful_transactions / total_transactions * 100) if total_transactions > 0 else 0
+        
+        total_revenue = db.session.query(db.func.sum(Transaction.amount)).filter(
+            db.func.date(Transaction.created_at) >= start_date,
+            Transaction.status == 'completed'
+        ).scalar() or 0
+        
+        # Client performance data
+        client_performance = []
+        for client in clients:
+            client_transactions = Transaction.query.filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= start_date
+            ).count()
+            
+            client_successful = Transaction.query.filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= start_date,
+                Transaction.status == 'completed'
+            ).count()
+            
+            client_success_rate = (client_successful / client_transactions * 100) if client_transactions > 0 else 0
+            
+            client_revenue = db.session.query(db.func.sum(Transaction.amount)).filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= start_date,
+                Transaction.status == 'completed'
+            ).scalar() or 0
+            
+            client_performance.append({
+                'client': client,
+                'transactions': client_transactions,
+                'success_rate': client_success_rate,
+                'revenue': client_revenue
+            })
+        
+        # Sort by revenue descending
+        client_performance.sort(key=lambda x: x['revenue'], reverse=True)
+        
+        return render_template("admin/performance_summary_report.html",
+                             start_date=start_date,
+                             end_date=end_date,
+                             total_clients=total_clients,
+                             total_transactions=total_transactions,
+                             overall_success_rate=overall_success_rate,
+                             total_revenue=total_revenue,
+                             client_performance=client_performance)
+        
+    except Exception as e:
+        flash(f"Error generating performance summary: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
