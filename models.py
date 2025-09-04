@@ -162,7 +162,7 @@ class Alert(db.Model):
     status = db.Column(db.String(20), default="active")  # active, acknowledged, resolved
     client_id = db.Column(db.Integer, db.ForeignKey("clients.id"), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
-    metadata = db.Column(db.JSON)  # Additional alert data
+    alert_data = db.Column(db.JSON)  # Additional alert data
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     acknowledged_at = db.Column(db.DateTime, nullable=True)
     acknowledged_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)

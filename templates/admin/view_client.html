@@ -20,10 +20,10 @@
 
     <!-- Custom styles for this template-->
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
-    
+
     <!-- Chart.js for performance charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <style>
         .performance-metric-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -33,42 +33,52 @@
             margin-bottom: 1rem;
             text-align: center;
         }
+
         .metric-value {
             font-size: 2.5rem;
             font-weight: bold;
             margin-bottom: 0.5rem;
         }
+
         .metric-label {
             font-size: 1rem;
             opacity: 0.9;
         }
+
         .metric-change {
             font-size: 0.875rem;
             margin-top: 0.5rem;
         }
+
         .chart-container {
             position: relative;
             height: 300px;
         }
+
         .status-badge {
             font-size: 0.875rem;
             padding: 0.5rem 1rem;
         }
+
         .activity-timeline {
             max-height: 400px;
             overflow-y: auto;
         }
+
         .timeline-item {
             border-left: 3px solid #e3e6f0;
             padding-left: 15px;
             margin-bottom: 15px;
         }
+
         .timeline-item.success {
             border-left-color: #1cc88a;
         }
+
         .timeline-item.warning {
             border-left-color: #f6c23e;
         }
+
         .timeline-item.danger {
             border-left-color: #e74a3b;
         }
@@ -187,8 +197,7 @@
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ session.username }}</span>
                                 <img class="img-profile rounded-circle"
-                                    src="{{ url_for('static', filename='img/undraw_posting_photo.svg') }}"
-                                    alt="User Profile">
+                                    src="{{ url_for('static', filename='img/undraw_profile.svg') }}" alt="User Profile">
                             </a>
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -274,23 +283,23 @@
                             <div class="performance-metric-card">
                                 <div class="metric-value">
                                     {% if status_breakdown %}
-                                        {% for status in status_breakdown %}
-                                            {% if status.status == 'completed' %}
-                                                {{ status.count }}
-                                            {% endif %}
-                                        {% endfor %}
+                                    {% for status in status_breakdown %}
+                                    {% if status.status == 'completed' %}
+                                    {{ status.count }}
+                                    {% endif %}
+                                    {% endfor %}
                                     {% else %}
-                                        0
+                                    0
                                     {% endif %}
                                 </div>
                                 <div class="metric-label">Completed (30d)</div>
                                 <div class="metric-change">
                                     {% if status_breakdown %}
-                                        {% for status in status_breakdown %}
-                                            {% if status.status == 'pending' %}
-                                                {{ status.count }} pending
-                                            {% endif %}
-                                        {% endfor %}
+                                    {% for status in status_breakdown %}
+                                    {% if status.status == 'pending' %}
+                                    {{ status.count }} pending
+                                    {% endif %}
+                                    {% endfor %}
                                     {% endif %}
                                 </div>
                             </div>
@@ -519,7 +528,8 @@
                         <!-- Transaction Volume Chart -->
                         <div class="col-xl-8 col-lg-7">
                             <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <div
+                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                                     <h6 class="m-0 font-weight-bold text-primary">Transaction Volume (Last 30 Days)</h6>
                                 </div>
                                 <div class="card-body">
@@ -533,7 +543,8 @@
                         <!-- Service Usage Chart -->
                         <div class="col-xl-4 col-lg-5">
                             <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <div
+                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                                     <h6 class="m-0 font-weight-bold text-primary">Service Usage (30d)</h6>
                                 </div>
                                 <div class="card-body">
@@ -551,7 +562,8 @@
                         <div class="col-xl-6 col-lg-6">
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Transaction Status Breakdown (30d)</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">Transaction Status Breakdown (30d)
+                                    </h6>
                                 </div>
                                 <div class="card-body">
                                     {% if status_breakdown %}
@@ -568,12 +580,14 @@
                                                 {% for status in status_breakdown %}
                                                 <tr>
                                                     <td>
-                                                        <span class="badge badge-{{ 'success' if status.status == 'completed' else 'warning' if status.status == 'pending' else 'danger' }} status-badge">
+                                                        <span
+                                                            class="badge badge-{{ 'success' if status.status == 'completed' else 'warning' if status.status == 'pending' else 'danger' }} status-badge">
                                                             {{ status.status|title }}
                                                         </span>
                                                     </td>
                                                     <td>{{ status.count }}</td>
-                                                    <td>{{ "%.1f"|format((status.count / last_30d_transactions * 100) if last_30d_transactions > 0 else 0) }}%</td>
+                                                    <td>{{ "%.1f"|format((status.count / last_30d_transactions * 100) if
+                                                        last_30d_transactions > 0 else 0) }}%</td>
                                                 </tr>
                                                 {% endfor %}
                                             </tbody>
@@ -591,7 +605,8 @@
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
                                     <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
-                                    <a href="{{ url_for('admin.transactions', client_id=client.id) }}" class="btn btn-sm btn-primary">
+                                    <a href="{{ url_for('admin.transactions', client_id=client.id) }}"
+                                        class="btn btn-sm btn-primary">
                                         <i class="fas fa-external-link-alt"></i> View All
                                     </a>
                                 </div>
@@ -618,19 +633,22 @@
                                                         <small>{{ transaction.service.display_name }}</small>
                                                     </td>
                                                     <td>
-                                                        <span class="badge badge-{{ 'success' if transaction.status == 'completed' else 'warning' if transaction.status == 'pending' else 'danger' }} badge-sm">
+                                                        <span
+                                                            class="badge badge-{{ 'success' if transaction.status == 'completed' else 'warning' if transaction.status == 'pending' else 'danger' }} badge-sm">
                                                             {{ transaction.status }}
                                                         </span>
                                                     </td>
                                                     <td>
                                                         {% if transaction.amount %}
-                                                        <small class="font-weight-bold">${{ "{:,.2f}".format(transaction.amount) }}</small>
+                                                        <small class="font-weight-bold">${{
+                                                            "{:,.2f}".format(transaction.amount) }}</small>
                                                         {% else %}
                                                         <small class="text-muted">N/A</small>
                                                         {% endif %}
                                                     </td>
                                                     <td>
-                                                        <small>{{ transaction.created_at.strftime('%m/%d %H:%M') }}</small>
+                                                        <small>{{ transaction.created_at.strftime('%m/%d %H:%M')
+                                                            }}</small>
                                                     </td>
                                                 </tr>
                                                 {% endfor %}
@@ -653,7 +671,8 @@
                         <div class="col-12">
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                                    <h6 class="m-0 font-weight-bold text-primary">All Transactions for {{ client.company_name }}</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">All Transactions for {{
+                                        client.company_name }}</h6>
                                     <div>
                                         <button class="btn btn-sm btn-info" onclick="exportClientTransactions()">
                                             <i class="fas fa-download"></i> Export
@@ -666,8 +685,10 @@
                                         <div class="col-md-3">
                                             <label class="small">Date Range</label>
                                             <div class="input-group input-group-sm">
-                                                <input type="date" class="form-control" id="clientStartDate" placeholder="Start Date">
-                                                <input type="date" class="form-control" id="clientEndDate" placeholder="End Date">
+                                                <input type="date" class="form-control" id="clientStartDate"
+                                                    placeholder="Start Date">
+                                                <input type="date" class="form-control" id="clientEndDate"
+                                                    placeholder="End Date">
                                             </div>
                                         </div>
                                         <div class="col-md-2">
@@ -692,16 +713,20 @@
                                         <div class="col-md-2">
                                             <label class="small">Amount Range</label>
                                             <div class="input-group input-group-sm">
-                                                <input type="number" class="form-control" id="clientMinAmount" placeholder="Min" step="0.01">
-                                                <input type="number" class="form-control" id="clientMaxAmount" placeholder="Max" step="0.01">
+                                                <input type="number" class="form-control" id="clientMinAmount"
+                                                    placeholder="Min" step="0.01">
+                                                <input type="number" class="form-control" id="clientMaxAmount"
+                                                    placeholder="Max" step="0.01">
                                             </div>
                                         </div>
                                         <div class="col-md-2">
                                             <label class="small">Search</label>
                                             <div class="input-group input-group-sm">
-                                                <input type="text" class="form-control" id="clientSearch" placeholder="Transaction ID...">
+                                                <input type="text" class="form-control" id="clientSearch"
+                                                    placeholder="Transaction ID...">
                                                 <div class="input-group-append">
-                                                    <button class="btn btn-primary" type="button" onclick="filterClientTransactions()">
+                                                    <button class="btn btn-primary" type="button"
+                                                        onclick="filterClientTransactions()">
                                                         <i class="fas fa-search"></i>
                                                     </button>
                                                 </div>
@@ -709,7 +734,8 @@
                                         </div>
                                         <div class="col-md-1">
                                             <label class="small">&nbsp;</label>
-                                            <button class="btn btn-secondary btn-sm btn-block" onclick="clearClientFilters()">
+                                            <button class="btn btn-secondary btn-sm btn-block"
+                                                onclick="clearClientFilters()">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </div>
@@ -845,36 +871,36 @@
             data: {
                 labels: [
                     {% for day in daily_transactions %}
-                    '{{ day.date }}'{% if not loop.last %},{% endif %}
-                    {% endfor %}
+                    '{{ day.date }}'{% if not loop.last %}, {% endif %}
+        {% endfor %}
                 ],
-                datasets: [{
-                    label: 'Transactions',
-                    data: [
-                        {% for day in daily_transactions %}
-                        {{ day.count }}{% if not loop.last %},{% endif %}
-                        {% endfor %}
+        datasets: [{
+            label: 'Transactions',
+            data: [
+                {% for day in daily_transactions %}
+                        {{ day.count }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
                     ],
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                    tension: 0.1,
+        borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1,
                     fill: true
                 }]
             },
-            options: {
-                responsive: true,
+        options: {
+            responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+                    scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
                 }
             }
+        }
         });
 
         // Service Usage Chart
@@ -884,33 +910,33 @@
             data: {
                 labels: [
                     {% for service in service_usage %}
-                    '{{ service.display_name }}'{% if not loop.last %},{% endif %}
-                    {% endfor %}
+                    '{{ service.display_name }}'{% if not loop.last %}, {% endif %}
+        {% endfor %}
                 ],
-                datasets: [{
-                    data: [
-                        {% for service in service_usage %}
-                        {{ service.count }}{% if not loop.last %},{% endif %}
-                        {% endfor %}
+        datasets: [{
+            data: [
+                {% for service in service_usage %}
+                        {{ service.count }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
                     ],
-                    backgroundColor: [
-                        '#4e73df',
-                        '#1cc88a',
-                        '#36b9cc',
-                        '#f6c23e',
-                        '#e74a3b'
-                    ]
+        backgroundColor: [
+            '#4e73df',
+            '#1cc88a',
+            '#36b9cc',
+            '#f6c23e',
+            '#e74a3b'
+        ]
                 }]
             },
-            options: {
-                responsive: true,
+        options: {
+            responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
+                    plugins: {
+                legend: {
+                    position: 'bottom'
                 }
             }
+        }
         });
 
         // Client Transactions Management
@@ -920,7 +946,8 @@
         const clientId = {{ client.id }};
 
         // Load client transactions
-        function loadClientTransactions(page = 1, sortBy = 'created_at', sortOrder = 'desc') {
+        function loadClientTransactions(page = 1, sortBy = 'created_at', sortOrder = 'desc')
+        {
             const filters = {
                 page: page,
                 sort_by: sortBy,
@@ -935,30 +962,37 @@
             };
 
             // Remove empty filters
-            Object.keys(filters).forEach(key => {
-                if (filters[key] === '' || filters[key] === null) {
+            Object.keys(filters).forEach(key =>
+            {
+                if (filters[key] === '' || filters[key] === null)
+                {
                     delete filters[key];
                 }
             });
 
             const params = new URLSearchParams(filters);
-            
+
             fetch(`/admin/api/clients/${clientId}/transactions?${params.toString()}`)
                 .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
+                .then(data =>
+                {
+                    if (data.error)
+                    {
                         console.error('Error loading transactions:', data.error);
                         return;
                     }
-                    
+
                     // Update table body
                     const tbody = document.getElementById('clientTransactionsBody');
                     tbody.innerHTML = '';
-                    
-                    if (data.transactions.length === 0) {
+
+                    if (data.transactions.length === 0)
+                    {
                         tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No transactions found</td></tr>';
-                    } else {
-                        data.transactions.forEach(transaction => {
+                    } else
+                    {
+                        data.transactions.forEach(transaction =>
+                        {
                             const row = document.createElement('tr');
                             row.innerHTML = `
                                 <td><code class="small">${transaction.unique_id.substring(0, 8)}...</code></td>
@@ -982,19 +1016,22 @@
                             tbody.appendChild(row);
                         });
                     }
-                    
+
                     // Update pagination
                     updateClientPagination(data.pagination);
                 })
-                .catch(error => {
+                .catch(error =>
+                {
                     console.error('Error loading transactions:', error);
                     document.getElementById('clientTransactionsBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error loading transactions</td></tr>';
                 });
         }
 
         // Helper function to get status badge class
-        function getStatusBadgeClass(status) {
-            switch(status) {
+        function getStatusBadgeClass(status)
+        {
+            switch (status)
+            {
                 case 'completed': return 'success';
                 case 'pending': return 'warning';
                 case 'failed': return 'danger';
@@ -1004,42 +1041,49 @@
         }
 
         // Update pagination
-        function updateClientPagination(pagination) {
+        function updateClientPagination(pagination)
+        {
             const paginationContainer = document.getElementById('clientTransactionsPagination');
             paginationContainer.innerHTML = '';
-            
+
             if (pagination.pages <= 1) return;
-            
+
             // Previous button
-            if (pagination.has_prev) {
+            if (pagination.has_prev)
+            {
                 const prevLi = document.createElement('li');
                 prevLi.className = 'page-item';
                 prevLi.innerHTML = `<a class="page-link" href="#" onclick="loadClientTransactions(${pagination.prev_num}, '${currentClientSort}', '${currentClientOrder}')">Previous</a>`;
                 paginationContainer.appendChild(prevLi);
             }
-            
+
             // Page numbers
-            for (let i = 1; i <= pagination.pages; i++) {
-                if (i === pagination.page || (i >= pagination.page - 2 && i <= pagination.page + 2)) {
+            for (let i = 1; i <= pagination.pages; i++)
+            {
+                if (i === pagination.page || (i >= pagination.page - 2 && i <= pagination.page + 2))
+                {
                     const pageLi = document.createElement('li');
                     pageLi.className = `page-item ${i === pagination.page ? 'active' : ''}`;
                     pageLi.innerHTML = `<a class="page-link" href="#" onclick="loadClientTransactions(${i}, '${currentClientSort}', '${currentClientOrder}')">${i}</a>`;
                     paginationContainer.appendChild(pageLi);
-                } else if (i === 1 || i === pagination.pages) {
+                } else if (i === 1 || i === pagination.pages)
+                {
                     const pageLi = document.createElement('li');
                     pageLi.className = 'page-item';
                     pageLi.innerHTML = `<a class="page-link" href="#" onclick="loadClientTransactions(${i}, '${currentClientSort}', '${currentClientOrder}')">${i}</a>`;
                     paginationContainer.appendChild(pageLi);
-                } else if (i === pagination.page - 3 || i === pagination.page + 3) {
+                } else if (i === pagination.page - 3 || i === pagination.page + 3)
+                {
                     const ellipsisLi = document.createElement('li');
                     ellipsisLi.className = 'page-item disabled';
                     ellipsisLi.innerHTML = '<span class="page-link">...</span>';
                     paginationContainer.appendChild(ellipsisLi);
                 }
             }
-            
+
             // Next button
-            if (pagination.has_next) {
+            if (pagination.has_next)
+            {
                 const nextLi = document.createElement('li');
                 nextLi.className = 'page-item';
                 nextLi.innerHTML = `<a class="page-link" href="#" onclick="loadClientTransactions(${pagination.next_num}, '${currentClientSort}', '${currentClientOrder}')">Next</a>`;
@@ -1048,13 +1092,15 @@
         }
 
         // Filter client transactions
-        function filterClientTransactions() {
+        function filterClientTransactions()
+        {
             currentClientPage = 1;
             loadClientTransactions(currentClientPage, currentClientSort, currentClientOrder);
         }
 
         // Clear client filters
-        function clearClientFilters() {
+        function clearClientFilters()
+        {
             document.getElementById('clientStartDate').value = '';
             document.getElementById('clientEndDate').value = '';
             document.getElementById('clientServiceFilter').value = '';
@@ -1066,7 +1112,8 @@
         }
 
         // Export client transactions
-        function exportClientTransactions() {
+        function exportClientTransactions()
+        {
             const filters = {
                 export: 'csv',
                 start_date: document.getElementById('clientStartDate').value,
@@ -1079,15 +1126,17 @@
             };
 
             // Remove empty filters
-            Object.keys(filters).forEach(key => {
-                if (filters[key] === '' || filters[key] === null) {
+            Object.keys(filters).forEach(key =>
+            {
+                if (filters[key] === '' || filters[key] === null)
+                {
                     delete filters[key];
                 }
             });
 
             const params = new URLSearchParams(filters);
             const exportUrl = `/admin/api/clients/${clientId}/transactions?${params.toString()}`;
-            
+
             // Create temporary link and click it
             const link = document.createElement('a');
             link.href = exportUrl;
@@ -1098,21 +1147,25 @@
         }
 
         // Sortable headers for client transactions
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function ()
+        {
             // Add click handlers to sortable headers
-            document.querySelectorAll('#clientTransactionsTable .sortable-header').forEach(header => {
-                header.addEventListener('click', function() {
+            document.querySelectorAll('#clientTransactionsTable .sortable-header').forEach(header =>
+            {
+                header.addEventListener('click', function ()
+                {
                     const sortBy = this.dataset.sort;
                     let newOrder = 'asc';
-                    
-                    if (currentClientSort === sortBy && currentClientOrder === 'asc') {
+
+                    if (currentClientSort === sortBy && currentClientOrder === 'asc')
+                    {
                         newOrder = 'desc';
                     }
-                    
+
                     currentClientSort = sortBy;
                     currentClientOrder = newOrder;
                     currentClientPage = 1;
-                    
+
                     loadClientTransactions(currentClientPage, currentClientSort, currentClientOrder);
                 });
             });

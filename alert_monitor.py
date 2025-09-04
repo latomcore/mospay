@@ -220,7 +220,7 @@ class AlertMonitor:
                 severity=severity,
                 status='active',
                 client_id=client.id,
-                metadata={
+                alert_data={
                     'rule_id': rule.id,
                     'rule_name': rule.name,
                     'metric': rule.metric,
