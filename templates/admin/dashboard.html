@@ -19,39 +19,47 @@
 
     <!-- Custom styles for this template-->
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
-    
+
     <!-- Chart.js for real-time charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <style>
         .metric-card {
             transition: transform 0.2s ease-in-out;
         }
+
         .metric-card:hover {
             transform: translateY(-2px);
         }
+
         .metric-value {
             font-size: 2rem;
             font-weight: bold;
         }
+
         .metric-change {
             font-size: 0.875rem;
         }
+
         .chart-container {
             position: relative;
             height: 300px;
         }
+
         .activity-item {
             border-left: 3px solid #e3e6f0;
             padding-left: 15px;
             margin-bottom: 15px;
         }
+
         .activity-item.success {
             border-left-color: #1cc88a;
         }
+
         .activity-item.warning {
             border-left-color: #f6c23e;
         }
+
         .activity-item.danger {
             border-left-color: #e74a3b;
         }
@@ -291,9 +299,11 @@
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                                 Today's Revenue</div>
-                                            <div class="metric-value text-gray-800">${{ "{:,.2f}".format(today_revenue) }}</div>
+                                            <div class="metric-value text-gray-800">${{ "{:,.2f}".format(today_revenue)
+                                                }}</div>
                                             <div class="metric-change text-info">
-                                                <i class="fas fa-dollar-sign"></i> ${{ "{:,.2f}".format(month_revenue) }} this month
+                                                <i class="fas fa-dollar-sign"></i> ${{ "{:,.2f}".format(month_revenue)
+                                                }} this month
                                             </div>
                                         </div>
                                         <div class="col-auto">
@@ -338,7 +348,8 @@
                                                 Active Alerts</div>
                                             <div class="metric-value text-gray-800">{{ active_alerts }}</div>
                                             <div class="metric-change text-danger">
-                                                <i class="fas fa-exclamation-triangle"></i> {{ critical_alerts }} critical
+                                                <i class="fas fa-exclamation-triangle"></i> {{ critical_alerts }}
+                                                critical
                                             </div>
                                         </div>
                                         <div class="col-auto">
@@ -379,13 +390,16 @@
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                                 Quick Actions</div>
                                             <div class="mb-2">
-                                                <a href="{{ url_for('admin.alerts') }}" class="btn btn-sm btn-outline-primary mr-2">
+                                                <a href="{{ url_for('admin.alerts') }}"
+                                                    class="btn btn-sm btn-outline-primary mr-2">
                                                     <i class="fas fa-bell"></i> View Alerts
                                                 </a>
-                                                <a href="{{ url_for('admin.alert_rules') }}" class="btn btn-sm btn-outline-secondary mr-2">
+                                                <a href="{{ url_for('admin.alert_rules') }}"
+                                                    class="btn btn-sm btn-outline-secondary mr-2">
                                                     <i class="fas fa-cog"></i> Manage Rules
                                                 </a>
-                                                <form method="POST" action="{{ url_for('admin.check_alerts') }}" class="d-inline">
+                                                <form method="POST" action="{{ url_for('admin.check_alerts') }}"
+                                                    class="d-inline">
                                                     <button type="submit" class="btn btn-sm btn-outline-success">
                                                         <i class="fas fa-sync"></i> Check Alerts
                                                     </button>
@@ -406,7 +420,8 @@
                         <!-- Transaction Volume Chart -->
                         <div class="col-xl-8 col-lg-7">
                             <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <div
+                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                                     <h6 class="m-0 font-weight-bold text-primary">Transaction Volume (Last 7 Days)</h6>
                                 </div>
                                 <div class="card-body">
@@ -420,7 +435,8 @@
                         <!-- Service Distribution Chart -->
                         <div class="col-xl-4 col-lg-5">
                             <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <div
+                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                                     <h6 class="m-0 font-weight-bold text-primary">Service Distribution (24h)</h6>
                                 </div>
                                 <div class="card-body">
@@ -500,7 +516,8 @@
                                 <div class="card-body">
                                     {% if recent_logs %}
                                     {% for log in recent_logs[:8] %}
-                                    <div class="activity-item {{ 'success' if log.status_code == 200 else 'warning' if log.status_code < 400 else 'danger' }}">
+                                    <div
+                                        class="activity-item {{ 'success' if log.status_code == 200 else 'warning' if log.status_code < 400 else 'danger' }}">
                                         <div class="small text-gray-500">{{ log.created_at.strftime('%H:%M') }}</div>
                                         <div class="font-weight-bold">{{ log.client.company_name }}</div>
                                         <div class="small text-gray-600">{{ log.endpoint }}</div>
@@ -567,36 +584,36 @@
             data: {
                 labels: [
                     {% for trend in transaction_trends %}
-                    '{{ trend.date }}'{% if not loop.last %},{% endif %}
-                    {% endfor %}
+                    '{{ trend.date }}'{% if not loop.last %}, {% endif %}
+        {% endfor %}
                 ],
-                datasets: [{
-                    label: 'Transactions',
-                    data: [
-                        {% for trend in transaction_trends %}
-                        {{ trend.count }}{% if not loop.last %},{% endif %}
-                        {% endfor %}
+        datasets: [{
+            label: 'Transactions',
+            data: [
+                {% for trend in transaction_trends %}
+                        {{ trend.count }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
                     ],
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                    tension: 0.1,
+        borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1,
                     fill: true
                 }]
             },
-            options: {
-                responsive: true,
+        options: {
+            responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+                    scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
                 }
             }
+        }
         });
 
         // Service Distribution Chart
@@ -606,37 +623,38 @@
             data: {
                 labels: [
                     {% for service in service_stats %}
-                    '{{ service.display_name }}'{% if not loop.last %},{% endif %}
-                    {% endfor %}
+                    '{{ service.display_name }}'{% if not loop.last %}, {% endif %}
+        {% endfor %}
                 ],
-                datasets: [{
-                    data: [
-                        {% for service in service_stats %}
-                        {{ service.count }}{% if not loop.last %},{% endif %}
-                        {% endfor %}
+        datasets: [{
+            data: [
+                {% for service in service_stats %}
+                        {{ service.count }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
                     ],
-                    backgroundColor: [
-                        '#4e73df',
-                        '#1cc88a',
-                        '#36b9cc',
-                        '#f6c23e',
-                        '#e74a3b'
-                    ]
+        backgroundColor: [
+            '#4e73df',
+            '#1cc88a',
+            '#36b9cc',
+            '#f6c23e',
+            '#e74a3b'
+        ]
                 }]
             },
-            options: {
-                responsive: true,
+        options: {
+            responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
+                    plugins: {
+                legend: {
+                    position: 'bottom'
                 }
             }
+        }
         });
 
         // Auto-refresh dashboard every 30 seconds
-        setInterval(function() {
+        setInterval(function ()
+        {
             location.reload();
         }, 30000);
     </script>

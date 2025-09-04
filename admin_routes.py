@@ -127,62 +127,79 @@ def dashboard():
     """Enhanced admin dashboard with real-time metrics"""
     try:
         from datetime import datetime, timedelta
-        
+
         # Basic statistics
         total_clients = Client.query.count()
         total_services = Service.query.count()
         total_transactions = Transaction.query.count()
         active_clients = Client.query.filter_by(is_active=True).count()
-        
+
         # Enhanced statistics
         today = datetime.now().date()
         yesterday = today - timedelta(days=1)
         this_month = today.replace(day=1)
         last_month = (this_month - timedelta(days=1)).replace(day=1)
-        
+
         # Today's metrics
         today_transactions = Transaction.query.filter(
             db.func.date(Transaction.created_at) == today
         ).count()
-        
+
         # This month's metrics
         month_transactions = Transaction.query.filter(
             db.func.date(Transaction.created_at) >= this_month
         ).count()
-        
+
         # Success rate (last 24 hours)
         last_24h = datetime.now() - timedelta(hours=24)
         recent_transactions_count = Transaction.query.filter(
             Transaction.created_at >= last_24h
         ).count()
-        
+
         successful_transactions = Transaction.query.filter(
-            Transaction.created_at >= last_24h,
-            Transaction.status == 'completed'
+            Transaction.created_at >= last_24h, Transaction.status == "completed"
         ).count()
-        
-        success_rate = (successful_transactions / recent_transactions_count * 100) if recent_transactions_count > 0 else 0
-        
+
+        success_rate = (
+            (successful_transactions / recent_transactions_count * 100)
+            if recent_transactions_count > 0
+            else 0
+        )
+
         # Revenue calculations (assuming amount field exists)
-        today_revenue = db.session.query(db.func.sum(Transaction.amount)).filter(
-            db.func.date(Transaction.created_at) == today,
-            Transaction.status == 'completed'
-        ).scalar() or 0
-        
-        month_revenue = db.session.query(db.func.sum(Transaction.amount)).filter(
-            db.func.date(Transaction.created_at) >= this_month,
-            Transaction.status == 'completed'
-        ).scalar() or 0
-        
+        today_revenue = (
+            db.session.query(db.func.sum(Transaction.amount))
+            .filter(
+                db.func.date(Transaction.created_at) == today,
+                Transaction.status == "completed",
+            )
+            .scalar()
+            or 0
+        )
+
+        month_revenue = (
+            db.session.query(db.func.sum(Transaction.amount))
+            .filter(
+                db.func.date(Transaction.created_at) >= this_month,
+                Transaction.status == "completed",
+            )
+            .scalar()
+            or 0
+        )
+
         # Transaction volume by service (for charts)
-        service_stats = db.session.query(
-            Service.name,
-            Service.display_name,
-            db.func.count(Transaction.id).label('count')
-        ).join(Transaction, Service.id == Transaction.service_id).filter(
-            Transaction.created_at >= last_24h
-        ).group_by(Service.id, Service.name, Service.display_name).all()
-        
+        service_stats = (
+            db.session.query(
+                Service.name,
+                Service.display_name,
+                db.func.count(Transaction.id).label("count"),
+            )
+            .join(Transaction, Service.id == Transaction.service_id)
+            .filter(Transaction.created_at >= last_24h)
+            .group_by(Service.id, Service.name, Service.display_name)
+            .all()
+        )
+
         # Recent transactions
         recent_transactions = (
             Transaction.query.order_by(Transaction.created_at.desc()).limit(10).all()
@@ -190,13 +207,17 @@ def dashboard():
 
         # Recent API logs
         recent_logs = ApiLog.query.order_by(ApiLog.created_at.desc()).limit(10).all()
-        
+
         # Alert statistics
-        active_alerts = Alert.query.filter_by(status='active').count()
-        critical_alerts = Alert.query.filter_by(status='active', severity='critical').count()
-        warning_alerts = Alert.query.filter_by(status='active', severity='warning').count()
+        active_alerts = Alert.query.filter_by(status="active").count()
+        critical_alerts = Alert.query.filter_by(
+            status="active", severity="critical"
+        ).count()
+        warning_alerts = Alert.query.filter_by(
+            status="active", severity="warning"
+        ).count()
         total_alert_rules = AlertRule.query.filter_by(is_active=True).count()
-        
+
         # Transaction trends (last 7 days for charts)
         last_7_days = []
         for i in range(7):
@@ -204,10 +225,7 @@ def dashboard():
             count = Transaction.query.filter(
                 db.func.date(Transaction.created_at) == date
             ).count()
-            last_7_days.append({
-                'date': date.strftime('%Y-%m-%d'),
-                'count': count
-            })
+            last_7_days.append({"date": date.strftime("%Y-%m-%d"), "count": count})
         last_7_days.reverse()  # Show oldest to newest
 
         return render_template(
@@ -247,66 +265,88 @@ def clients():
     """List all clients with performance metrics"""
     try:
         from datetime import datetime, timedelta
-        
+
         page = request.args.get("page", 1, type=int)
         clients_query = Client.query.order_by(Client.created_at.desc())
-        
+
         # Get basic client data with pagination
         clients = clients_query.paginate(page=page, per_page=20, error_out=False)
-        
+
         # Calculate performance metrics for each client
         today = datetime.now().date()
         last_30_days = today - timedelta(days=30)
         last_7_days = today - timedelta(days=7)
-        
+
         client_performance = []
         for client in clients.items:
             # Get transaction counts
-            total_transactions = Transaction.query.filter_by(client_id=client.id).count()
+            total_transactions = Transaction.query.filter_by(
+                client_id=client.id
+            ).count()
             last_30d_transactions = Transaction.query.filter(
                 Transaction.client_id == client.id,
-                db.func.date(Transaction.created_at) >= last_30_days
+                db.func.date(Transaction.created_at) >= last_30_days,
             ).count()
             last_7d_transactions = Transaction.query.filter(
                 Transaction.client_id == client.id,
-                db.func.date(Transaction.created_at) >= last_7_days
+                db.func.date(Transaction.created_at) >= last_7_days,
             ).count()
-            
+
             # Get success rate (last 30 days)
             successful_transactions = Transaction.query.filter(
                 Transaction.client_id == client.id,
                 db.func.date(Transaction.created_at) >= last_30_days,
-                Transaction.status == 'completed'
+                Transaction.status == "completed",
             ).count()
-            
-            success_rate = (successful_transactions / last_30d_transactions * 100) if last_30d_transactions > 0 else 0
-            
+
+            success_rate = (
+                (successful_transactions / last_30d_transactions * 100)
+                if last_30d_transactions > 0
+                else 0
+            )
+
             # Get revenue (last 30 days)
-            revenue_30d = db.session.query(db.func.sum(Transaction.amount)).filter(
-                Transaction.client_id == client.id,
-                db.func.date(Transaction.created_at) >= last_30_days,
-                Transaction.status == 'completed'
-            ).scalar() or 0
-            
+            revenue_30d = (
+                db.session.query(db.func.sum(Transaction.amount))
+                .filter(
+                    Transaction.client_id == client.id,
+                    db.func.date(Transaction.created_at) >= last_30_days,
+                    Transaction.status == "completed",
+                )
+                .scalar()
+                or 0
+            )
+
             # Get last transaction date
-            last_transaction = Transaction.query.filter_by(client_id=client.id).order_by(
-                Transaction.created_at.desc()
-            ).first()
-            
-            client_performance.append({
-                'client': client,
-                'total_transactions': total_transactions,
-                'last_30d_transactions': last_30d_transactions,
-                'last_7d_transactions': last_7d_transactions,
-                'success_rate': round(success_rate, 1),
-                'revenue_30d': revenue_30d,
-                'last_transaction': last_transaction.created_at if last_transaction else None,
-                'is_active_recently': last_transaction.created_at >= (datetime.now() - timedelta(days=7)) if last_transaction else False
-            })
-        
-        return render_template("admin/clients.html", 
-                             clients=clients, 
-                             client_performance=client_performance)
+            last_transaction = (
+                Transaction.query.filter_by(client_id=client.id)
+                .order_by(Transaction.created_at.desc())
+                .first()
+            )
+
+            client_performance.append(
+                {
+                    "client": client,
+                    "total_transactions": total_transactions,
+                    "last_30d_transactions": last_30d_transactions,
+                    "last_7d_transactions": last_7d_transactions,
+                    "success_rate": round(success_rate, 1),
+                    "revenue_30d": revenue_30d,
+                    "last_transaction": (
+                        last_transaction.created_at if last_transaction else None
+                    ),
+                    "is_active_recently": (
+                        last_transaction.created_at
+                        >= (datetime.now() - timedelta(days=7))
+                        if last_transaction
+                        else False
+                    ),
+                }
+            )
+
+        return render_template(
+            "admin/clients.html", clients=clients, client_performance=client_performance
+        )
     except Exception as e:
         flash(f"Error loading clients: {str(e)}", "error")
         return redirect(url_for("admin.dashboard"))
@@ -356,89 +396,115 @@ def view_client(client_id):
     """View client details with performance dashboard"""
     try:
         from datetime import datetime, timedelta
-        
+
         client = Client.query.get_or_404(client_id)
         services = Service.query.all()
         client_services = ClientService.query.filter_by(client_id=client_id).all()
-        
+
         # Performance metrics
         today = datetime.now().date()
         last_30_days = today - timedelta(days=30)
         last_7_days = today - timedelta(days=7)
         last_90_days = today - timedelta(days=90)
-        
+
         # Transaction statistics
         total_transactions = Transaction.query.filter_by(client_id=client_id).count()
         last_30d_transactions = Transaction.query.filter(
             Transaction.client_id == client_id,
-            db.func.date(Transaction.created_at) >= last_30_days
+            db.func.date(Transaction.created_at) >= last_30_days,
         ).count()
         last_7d_transactions = Transaction.query.filter(
             Transaction.client_id == client_id,
-            db.func.date(Transaction.created_at) >= last_7_days
+            db.func.date(Transaction.created_at) >= last_7_days,
         ).count()
-        
+
         # Success rates
         successful_30d = Transaction.query.filter(
             Transaction.client_id == client_id,
             db.func.date(Transaction.created_at) >= last_30_days,
-            Transaction.status == 'completed'
+            Transaction.status == "completed",
         ).count()
-        
-        success_rate_30d = (successful_30d / last_30d_transactions * 100) if last_30d_transactions > 0 else 0
-        
+
+        success_rate_30d = (
+            (successful_30d / last_30d_transactions * 100)
+            if last_30d_transactions > 0
+            else 0
+        )
+
         # Revenue metrics
-        revenue_30d = db.session.query(db.func.sum(Transaction.amount)).filter(
-            Transaction.client_id == client_id,
-            db.func.date(Transaction.created_at) >= last_30_days,
-            Transaction.status == 'completed'
-        ).scalar() or 0
-        
-        revenue_7d = db.session.query(db.func.sum(Transaction.amount)).filter(
-            Transaction.client_id == client_id,
-            db.func.date(Transaction.created_at) >= last_7_days,
-            Transaction.status == 'completed'
-        ).scalar() or 0
-        
+        revenue_30d = (
+            db.session.query(db.func.sum(Transaction.amount))
+            .filter(
+                Transaction.client_id == client_id,
+                db.func.date(Transaction.created_at) >= last_30_days,
+                Transaction.status == "completed",
+            )
+            .scalar()
+            or 0
+        )
+
+        revenue_7d = (
+            db.session.query(db.func.sum(Transaction.amount))
+            .filter(
+                Transaction.client_id == client_id,
+                db.func.date(Transaction.created_at) >= last_7_days,
+                Transaction.status == "completed",
+            )
+            .scalar()
+            or 0
+        )
+
         # Transaction trends (last 30 days)
         daily_transactions = []
         for i in range(30):
             date = today - timedelta(days=i)
             count = Transaction.query.filter(
                 Transaction.client_id == client_id,
-                db.func.date(Transaction.created_at) == date
+                db.func.date(Transaction.created_at) == date,
             ).count()
-            daily_transactions.append({
-                'date': date.strftime('%Y-%m-%d'),
-                'count': count
-            })
+            daily_transactions.append(
+                {"date": date.strftime("%Y-%m-%d"), "count": count}
+            )
         daily_transactions.reverse()
-        
+
         # Service usage breakdown
-        service_usage = db.session.query(
-            Service.name,
-            Service.display_name,
-            db.func.count(Transaction.id).label('count'),
-            db.func.sum(Transaction.amount).label('revenue')
-        ).join(Transaction, Service.id == Transaction.service_id).filter(
-            Transaction.client_id == client_id,
-            db.func.date(Transaction.created_at) >= last_30_days
-        ).group_by(Service.id, Service.name, Service.display_name).all()
-        
+        service_usage = (
+            db.session.query(
+                Service.name,
+                Service.display_name,
+                db.func.count(Transaction.id).label("count"),
+                db.func.sum(Transaction.amount).label("revenue"),
+            )
+            .join(Transaction, Service.id == Transaction.service_id)
+            .filter(
+                Transaction.client_id == client_id,
+                db.func.date(Transaction.created_at) >= last_30_days,
+            )
+            .group_by(Service.id, Service.name, Service.display_name)
+            .all()
+        )
+
         # Recent transactions
-        recent_transactions = Transaction.query.filter_by(
-            client_id=client_id
-        ).order_by(Transaction.created_at.desc()).limit(10).all()
-        
+        recent_transactions = (
+            Transaction.query.filter_by(client_id=client_id)
+            .order_by(Transaction.created_at.desc())
+            .limit(10)
+            .all()
+        )
+
         # Status breakdown
-        status_breakdown = db.session.query(
-            Transaction.status,
-            db.func.count(Transaction.id).label('count')
-        ).filter(
-            Transaction.client_id == client_id,
-            db.func.date(Transaction.created_at) >= last_30_days
-        ).group_by(Transaction.status).all()
-        
+        status_breakdown = (
+            db.session.query(
+                Transaction.status, db.func.count(Transaction.id).label("count")
+            )
+            .filter(
+                Transaction.client_id == client_id,
+                db.func.date(Transaction.created_at) >= last_30_days,
+            )
+            .group_by(Transaction.status)
+            .all()
+        )
+
         return render_template(
             "admin/view_client.html",
             client=client,
@@ -454,7 +520,7 @@ def view_client(client_id):
             daily_transactions=daily_transactions,
             service_usage=service_usage,
             recent_transactions=recent_transactions,
-            status_breakdown=status_breakdown
+            status_breakdown=status_breakdown,
         )
     except Exception as e:
         flash(f"Error loading client: {str(e)}", "error")
@@ -697,33 +763,33 @@ def transactions():
     """List all transactions with advanced filtering"""
     try:
         from datetime import datetime
-        
+
         # Get filter parameters
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 50, type=int)
-        
+
         # Date range filters
         start_date = request.args.get("start_date")
         end_date = request.args.get("end_date")
-        
+
         # Filter parameters
         client_id = request.args.get("client_id", type=int)
         service_id = request.args.get("service_id", type=int)
         status = request.args.get("status")
         amount_min = request.args.get("amount_min", type=float)
         amount_max = request.args.get("amount_max", type=float)
-        
+
         # Search parameters
         search = request.args.get("search", "").strip()
         search_type = request.args.get("search_type", "all")
-        
+
         # Sort parameters
         sort_by = request.args.get("sort_by", "created_at")
         sort_order = request.args.get("sort_order", "desc")
-        
+
         # Build query
         query = Transaction.query
-        
+
         # Apply date filters
         if start_date:
             try:
@@ -731,41 +797,44 @@ def transactions():
                 query = query.filter(Transaction.created_at >= start_datetime)
             except ValueError:
                 pass
-                
+
         if end_date:
             try:
                 end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
                 # Add one day to include the entire end date
                 from datetime import timedelta
+
                 end_datetime = end_datetime + timedelta(days=1)
                 query = query.filter(Transaction.created_at < end_datetime)
             except ValueError:
                 pass
-        
+
         # Apply client filter
         if client_id:
             query = query.filter(Transaction.client_id == client_id)
-            
+
         # Apply service filter
         if service_id:
             query = query.filter(Transaction.service_id == service_id)
-            
+
         # Apply status filter
         if status:
             query = query.filter(Transaction.status == status)
-            
+
         # Apply amount filters
         if amount_min is not None:
             query = query.filter(Transaction.amount >= amount_min)
         if amount_max is not None:
             query = query.filter(Transaction.amount <= amount_max)
-            
+
         # Apply search filters
         if search:
             if search_type == "transaction_id":
                 query = query.filter(Transaction.unique_id.ilike(f"%{search}%"))
             elif search_type == "client_name":
-                query = query.join(Client).filter(Client.company_name.ilike(f"%{search}%"))
+                query = query.join(Client).filter(
+                    Client.company_name.ilike(f"%{search}%")
+                )
             elif search_type == "mobile_number":
                 query = query.filter(Transaction.mobile_number.ilike(f"%{search}%"))
             else:  # search all
@@ -773,10 +842,10 @@ def transactions():
                     db.or_(
                         Transaction.unique_id.ilike(f"%{search}%"),
                         Transaction.mobile_number.ilike(f"%{search}%"),
-                        Client.company_name.ilike(f"%{search}%")
+                        Client.company_name.ilike(f"%{search}%"),
                     )
                 ).join(Client)
-        
+
         # Apply sorting
         if sort_by == "amount":
             sort_column = Transaction.amount
@@ -787,82 +856,96 @@ def transactions():
             query = query.join(Client)
         else:  # default to created_at
             sort_column = Transaction.created_at
-            
+
         if sort_order == "asc":
             query = query.order_by(sort_column.asc())
         else:
             query = query.order_by(sort_column.desc())
-        
+
         # Paginate results
-        transactions = query.paginate(
-            page=page, 
-            per_page=per_page, 
-            error_out=False
-        )
-        
+        transactions = query.paginate(page=page, per_page=per_page, error_out=False)
+
         # Get filter options for dropdowns
-        clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        clients = (
+            Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        )
         services = Service.query.order_by(Service.display_name).all()
-        
+
         # Get unique statuses
         statuses = db.session.query(Transaction.status).distinct().all()
         status_options = [status[0] for status in statuses if status[0]]
-        
+
         # Handle CSV export
-        if request.args.get('export') == 'csv':
+        if request.args.get("export") == "csv":
             import csv
             import io
             from flask import make_response
-            
+
             output = io.StringIO()
             writer = csv.writer(output)
-            
+
             # Write header
-            writer.writerow([
-                'Unique ID', 'Client', 'Service', 'Status', 'Amount', 
-                'Mobile Number', 'Created At', 'Updated At'
-            ])
-            
+            writer.writerow(
+                [
+                    "Unique ID",
+                    "Client",
+                    "Service",
+                    "Status",
+                    "Amount",
+                    "Mobile Number",
+                    "Created At",
+                    "Updated At",
+                ]
+            )
+
             # Write data
             for transaction in transactions.items:
-                writer.writerow([
-                    transaction.unique_id,
-                    transaction.client.company_name,
-                    transaction.service.display_name,
-                    transaction.status,
-                    transaction.amount or '',
-                    transaction.mobile_number or '',
-                    transaction.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    transaction.updated_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.updated_at else ''
-                ])
-            
+                writer.writerow(
+                    [
+                        transaction.unique_id,
+                        transaction.client.company_name,
+                        transaction.service.display_name,
+                        transaction.status,
+                        transaction.amount or "",
+                        transaction.mobile_number or "",
+                        transaction.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                        (
+                            transaction.updated_at.strftime("%Y-%m-%d %H:%M:%S")
+                            if transaction.updated_at
+                            else ""
+                        ),
+                    ]
+                )
+
             output.seek(0)
             response = make_response(output.getvalue())
-            response.headers['Content-Type'] = 'text/csv'
-            response.headers['Content-Disposition'] = f'attachment; filename=transactions_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+            response.headers["Content-Type"] = "text/csv"
+            response.headers["Content-Disposition"] = (
+                f'attachment; filename=transactions_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+            )
             return response
 
         return render_template(
-            "admin/transactions.html", 
+            "admin/transactions.html",
             transactions=transactions,
             clients=clients,
             services=services,
             status_options=status_options,
             # Pass current filter values to maintain state
             current_filters={
-                'start_date': start_date,
-                'end_date': end_date,
-                'client_id': client_id,
-                'service_id': service_id,
-                'status': status,
-                'amount_min': amount_min,
-                'amount_max': amount_max,
-                'search': search,
-                'search_type': search_type,
-                'sort_by': sort_by,
-                'sort_order': sort_order,
-                'per_page': per_page
-            }
+                "start_date": start_date,
+                "end_date": end_date,
+                "client_id": client_id,
+                "service_id": service_id,
+                "status": status,
+                "amount_min": amount_min,
+                "amount_max": amount_max,
+                "search": search,
+                "search_type": search_type,
+                "sort_by": sort_by,
+                "sort_order": sort_order,
+                "per_page": per_page,
+            },
         )
     except Exception as e:
         flash(f"Error loading transactions: {str(e)}", "error")
@@ -1111,31 +1194,31 @@ def client_transactions_api(client_id):
     """API endpoint for client transactions with filtering and pagination"""
     try:
         from datetime import datetime
-        
+
         # Get filter parameters
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 25, type=int)
-        
+
         # Date range filters
         start_date = request.args.get("start_date")
         end_date = request.args.get("end_date")
-        
+
         # Filter parameters
         service_id = request.args.get("service_id", type=int)
         status = request.args.get("status")
         amount_min = request.args.get("amount_min", type=float)
         amount_max = request.args.get("amount_max", type=float)
-        
+
         # Search parameters
         search = request.args.get("search", "").strip()
-        
+
         # Sort parameters
         sort_by = request.args.get("sort_by", "created_at")
         sort_order = request.args.get("sort_order", "desc")
-        
+
         # Build query for this specific client
         query = Transaction.query.filter_by(client_id=client_id)
-        
+
         # Apply date filters
         if start_date:
             try:
@@ -1143,34 +1226,35 @@ def client_transactions_api(client_id):
                 query = query.filter(Transaction.created_at >= start_datetime)
             except ValueError:
                 pass
-                
+
         if end_date:
             try:
                 end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
                 from datetime import timedelta
+
                 end_datetime = end_datetime + timedelta(days=1)
                 query = query.filter(Transaction.created_at < end_datetime)
             except ValueError:
                 pass
-        
+
         # Apply service filter
         if service_id:
             query = query.filter(Transaction.service_id == service_id)
-            
+
         # Apply status filter
         if status:
             query = query.filter(Transaction.status == status)
-            
+
         # Apply amount filters
         if amount_min is not None:
             query = query.filter(Transaction.amount >= amount_min)
         if amount_max is not None:
             query = query.filter(Transaction.amount <= amount_max)
-            
+
         # Apply search filters
         if search:
             query = query.filter(Transaction.unique_id.ilike(f"%{search}%"))
-        
+
         # Apply sorting
         if sort_by == "amount":
             sort_column = Transaction.amount
@@ -1181,81 +1265,99 @@ def client_transactions_api(client_id):
             query = query.join(Service)
         else:  # default to created_at
             sort_column = Transaction.created_at
-            
+
         if sort_order == "asc":
             query = query.order_by(sort_column.asc())
         else:
             query = query.order_by(sort_column.desc())
-        
+
         # Handle CSV export
-        if request.args.get('export') == 'csv':
+        if request.args.get("export") == "csv":
             import csv
             import io
             from flask import make_response
-            
+
             # Get all transactions for export (no pagination)
             all_transactions = query.all()
-            
+
             output = io.StringIO()
             writer = csv.writer(output)
-            
+
             # Write header
-            writer.writerow([
-                'Transaction ID', 'Service', 'Status', 'Amount', 
-                'Mobile Number', 'Created At', 'Updated At'
-            ])
-            
+            writer.writerow(
+                [
+                    "Transaction ID",
+                    "Service",
+                    "Status",
+                    "Amount",
+                    "Mobile Number",
+                    "Created At",
+                    "Updated At",
+                ]
+            )
+
             # Write data
             for transaction in all_transactions:
-                writer.writerow([
-                    transaction.unique_id,
-                    transaction.service.display_name,
-                    transaction.status,
-                    transaction.amount or '',
-                    transaction.mobile_number or '',
-                    transaction.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    transaction.updated_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.updated_at else ''
-                ])
-            
+                writer.writerow(
+                    [
+                        transaction.unique_id,
+                        transaction.service.display_name,
+                        transaction.status,
+                        transaction.amount or "",
+                        transaction.mobile_number or "",
+                        transaction.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                        (
+                            transaction.updated_at.strftime("%Y-%m-%d %H:%M:%S")
+                            if transaction.updated_at
+                            else ""
+                        ),
+                    ]
+                )
+
             output.seek(0)
             response = make_response(output.getvalue())
-            response.headers['Content-Type'] = 'text/csv'
-            response.headers['Content-Disposition'] = f'attachment; filename=client_{client_id}_transactions_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+            response.headers["Content-Type"] = "text/csv"
+            response.headers["Content-Disposition"] = (
+                f'attachment; filename=client_{client_id}_transactions_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+            )
             return response
-        
+
         # Paginate results
-        transactions = query.paginate(
-            page=page, 
-            per_page=per_page, 
-            error_out=False
-        )
-        
+        transactions = query.paginate(page=page, per_page=per_page, error_out=False)
+
         # Return JSON response
-        return jsonify({
-            'transactions': [{
-                'id': t.id,
-                'unique_id': t.unique_id,
-                'service_name': t.service.display_name,
-                'status': t.status,
-                'amount': float(t.amount) if t.amount else None,
-                'mobile_number': t.mobile_number,
-                'created_at': t.created_at.isoformat(),
-                'updated_at': t.updated_at.isoformat() if t.updated_at else None
-            } for t in transactions.items],
-            'pagination': {
-                'page': transactions.page,
-                'pages': transactions.pages,
-                'per_page': transactions.per_page,
-                'total': transactions.total,
-                'has_prev': transactions.has_prev,
-                'has_next': transactions.has_next,
-                'prev_num': transactions.prev_num,
-                'next_num': transactions.next_num
+        return jsonify(
+            {
+                "transactions": [
+                    {
+                        "id": t.id,
+                        "unique_id": t.unique_id,
+                        "service_name": t.service.display_name,
+                        "status": t.status,
+                        "amount": float(t.amount) if t.amount else None,
+                        "mobile_number": t.mobile_number,
+                        "created_at": t.created_at.isoformat(),
+                        "updated_at": (
+                            t.updated_at.isoformat() if t.updated_at else None
+                        ),
+                    }
+                    for t in transactions.items
+                ],
+                "pagination": {
+                    "page": transactions.page,
+                    "pages": transactions.pages,
+                    "per_page": transactions.per_page,
+                    "total": transactions.total,
+                    "has_prev": transactions.has_prev,
+                    "has_next": transactions.has_next,
+                    "prev_num": transactions.prev_num,
+                    "next_num": transactions.next_num,
+                },
             }
-        })
-        
+        )
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 # Alert Management
@@ -1265,19 +1367,19 @@ def alerts():
     """List all alerts with filtering"""
     try:
         from datetime import datetime, timedelta
-        
+
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 25, type=int)
-        
+
         # Filter parameters
         status = request.args.get("status", "")
         severity = request.args.get("severity", "")
         alert_type = request.args.get("alert_type", "")
         client_id = request.args.get("client_id", type=int)
-        
+
         # Build query
         query = Alert.query
-        
+
         if status:
             query = query.filter(Alert.status == status)
         if severity:
@@ -1286,33 +1388,31 @@ def alerts():
             query = query.filter(Alert.alert_type == alert_type)
         if client_id:
             query = query.filter(Alert.client_id == client_id)
-        
+
         # Order by creation date (newest first)
         query = query.order_by(Alert.created_at.desc())
-        
+
         # Paginate results
-        alerts = query.paginate(
-            page=page, 
-            per_page=per_page, 
-            error_out=False
-        )
-        
+        alerts = query.paginate(page=page, per_page=per_page, error_out=False)
+
         # Get filter options
-        clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
-        
+        clients = (
+            Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        )
+
         return render_template(
             "admin/alerts.html",
             alerts=alerts,
             clients=clients,
             current_filters={
-                'status': status,
-                'severity': severity,
-                'alert_type': alert_type,
-                'client_id': client_id,
-                'per_page': per_page
-            }
+                "status": status,
+                "severity": severity,
+                "alert_type": alert_type,
+                "client_id": client_id,
+                "per_page": per_page,
+            },
         )
-        
+
     except Exception as e:
         flash(f"Error loading alerts: {str(e)}", "error")
         return redirect(url_for("admin.dashboard"))
@@ -1324,16 +1424,16 @@ def acknowledge_alert(alert_id):
     """Acknowledge an alert"""
     try:
         from alert_monitor import alert_monitor
-        
-        user_id = session.get('user_id')
+
+        user_id = session.get("user_id")
         if alert_monitor.acknowledge_alert(alert_id, user_id):
             flash("Alert acknowledged successfully", "success")
         else:
             flash("Error acknowledging alert", "error")
-            
+
     except Exception as e:
         flash(f"Error acknowledging alert: {str(e)}", "error")
-    
+
     return redirect(url_for("admin.alerts"))
 
 
@@ -1343,16 +1443,16 @@ def resolve_alert(alert_id):
     """Resolve an alert"""
     try:
         from alert_monitor import alert_monitor
-        
-        user_id = session.get('user_id')
+
+        user_id = session.get("user_id")
         if alert_monitor.resolve_alert(alert_id, user_id):
             flash("Alert resolved successfully", "success")
         else:
             flash("Error resolving alert", "error")
-            
+
     except Exception as e:
         flash(f"Error resolving alert: {str(e)}", "error")
-    
+
     return redirect(url_for("admin.alerts"))
 
 
@@ -1365,11 +1465,13 @@ def alert_rules():
         rules = AlertRule.query.order_by(AlertRule.created_at.desc()).paginate(
             page=page, per_page=20, error_out=False
         )
-        
-        clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
-        
+
+        clients = (
+            Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        )
+
         return render_template("admin/alert_rules.html", rules=rules, clients=clients)
-        
+
     except Exception as e:
         flash(f"Error loading alert rules: {str(e)}", "error")
         return redirect(url_for("admin.dashboard"))
@@ -1390,18 +1492,22 @@ def new_alert_rule():
                 threshold_operator=request.form.get("threshold_operator"),
                 time_window=int(request.form.get("time_window")),
                 is_active=bool(request.form.get("is_active")),
-                client_id=int(request.form.get("client_id")) if request.form.get("client_id") else None
+                client_id=(
+                    int(request.form.get("client_id"))
+                    if request.form.get("client_id")
+                    else None
+                ),
             )
-            
+
             db.session.add(rule)
             db.session.commit()
-            
+
             flash("Alert rule created successfully", "success")
             return redirect(url_for("admin.alert_rules"))
-            
+
         except Exception as e:
             flash(f"Error creating alert rule: {str(e)}", "error")
-    
+
     clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
     return render_template("admin/new_alert_rule.html", clients=clients)
 
@@ -1411,7 +1517,7 @@ def new_alert_rule():
 def edit_alert_rule(rule_id):
     """Edit alert rule"""
     rule = AlertRule.query.get_or_404(rule_id)
-    
+
     if request.method == "POST":
         try:
             rule.name = request.form.get("name")
@@ -1422,16 +1528,20 @@ def edit_alert_rule(rule_id):
             rule.threshold_operator = request.form.get("threshold_operator")
             rule.time_window = int(request.form.get("time_window"))
             rule.is_active = bool(request.form.get("is_active"))
-            rule.client_id = int(request.form.get("client_id")) if request.form.get("client_id") else None
-            
+            rule.client_id = (
+                int(request.form.get("client_id"))
+                if request.form.get("client_id")
+                else None
+            )
+
             db.session.commit()
-            
+
             flash("Alert rule updated successfully", "success")
             return redirect(url_for("admin.alert_rules"))
-            
+
         except Exception as e:
             flash(f"Error updating alert rule: {str(e)}", "error")
-    
+
     clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
     return render_template("admin/edit_alert_rule.html", rule=rule, clients=clients)
 
@@ -1444,12 +1554,12 @@ def delete_alert_rule(rule_id):
         rule = AlertRule.query.get_or_404(rule_id)
         db.session.delete(rule)
         db.session.commit()
-        
+
         flash("Alert rule deleted successfully", "success")
-        
+
     except Exception as e:
         flash(f"Error deleting alert rule: {str(e)}", "error")
-    
+
     return redirect(url_for("admin.alert_rules"))
 
 
@@ -1459,15 +1569,18 @@ def check_alerts():
     """Manually trigger alert checking"""
     try:
         from alert_monitor import alert_monitor
-        
+
         alerts_created = alert_monitor.check_all_rules()
-        
+
         if alerts_created:
-            flash(f"Alert check completed. {len(alerts_created)} new alerts created.", "success")
+            flash(
+                f"Alert check completed. {len(alerts_created)} new alerts created.",
+                "success",
+            )
         else:
             flash("Alert check completed. No new alerts created.", "info")
-            
+
     except Exception as e:
         flash(f"Error checking alerts: {str(e)}", "error")
-    
+
     return redirect(url_for("admin.alerts"))
