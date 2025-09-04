@@ -535,14 +535,176 @@ def revoke_service(client_id, service_id):
 @admin.route("/transactions")
 @admin_required
 def transactions():
-    """List all transactions"""
+    """List all transactions with advanced filtering"""
     try:
+        from datetime import datetime
+        
+        # Get filter parameters
         page = request.args.get("page", 1, type=int)
-        transactions = Transaction.query.order_by(
-            Transaction.created_at.desc()
-        ).paginate(page=page, per_page=50, error_out=False)
+        per_page = request.args.get("per_page", 50, type=int)
+        
+        # Date range filters
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
+        
+        # Filter parameters
+        client_id = request.args.get("client_id", type=int)
+        service_id = request.args.get("service_id", type=int)
+        status = request.args.get("status")
+        amount_min = request.args.get("amount_min", type=float)
+        amount_max = request.args.get("amount_max", type=float)
+        
+        # Search parameters
+        search = request.args.get("search", "").strip()
+        search_type = request.args.get("search_type", "all")
+        
+        # Sort parameters
+        sort_by = request.args.get("sort_by", "created_at")
+        sort_order = request.args.get("sort_order", "desc")
+        
+        # Build query
+        query = Transaction.query
+        
+        # Apply date filters
+        if start_date:
+            try:
+                start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
+                query = query.filter(Transaction.created_at >= start_datetime)
+            except ValueError:
+                pass
+                
+        if end_date:
+            try:
+                end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
+                # Add one day to include the entire end date
+                from datetime import timedelta
+                end_datetime = end_datetime + timedelta(days=1)
+                query = query.filter(Transaction.created_at < end_datetime)
+            except ValueError:
+                pass
+        
+        # Apply client filter
+        if client_id:
+            query = query.filter(Transaction.client_id == client_id)
+            
+        # Apply service filter
+        if service_id:
+            query = query.filter(Transaction.service_id == service_id)
+            
+        # Apply status filter
+        if status:
+            query = query.filter(Transaction.status == status)
+            
+        # Apply amount filters
+        if amount_min is not None:
+            query = query.filter(Transaction.amount >= amount_min)
+        if amount_max is not None:
+            query = query.filter(Transaction.amount <= amount_max)
+            
+        # Apply search filters
+        if search:
+            if search_type == "transaction_id":
+                query = query.filter(Transaction.unique_id.ilike(f"%{search}%"))
+            elif search_type == "client_name":
+                query = query.join(Client).filter(Client.company_name.ilike(f"%{search}%"))
+            elif search_type == "mobile_number":
+                query = query.filter(Transaction.mobile_number.ilike(f"%{search}%"))
+            else:  # search all
+                query = query.filter(
+                    db.or_(
+                        Transaction.unique_id.ilike(f"%{search}%"),
+                        Transaction.mobile_number.ilike(f"%{search}%"),
+                        Client.company_name.ilike(f"%{search}%")
+                    )
+                ).join(Client)
+        
+        # Apply sorting
+        if sort_by == "amount":
+            sort_column = Transaction.amount
+        elif sort_by == "status":
+            sort_column = Transaction.status
+        elif sort_by == "client":
+            sort_column = Client.company_name
+            query = query.join(Client)
+        else:  # default to created_at
+            sort_column = Transaction.created_at
+            
+        if sort_order == "asc":
+            query = query.order_by(sort_column.asc())
+        else:
+            query = query.order_by(sort_column.desc())
+        
+        # Paginate results
+        transactions = query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        # Get filter options for dropdowns
+        clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        services = Service.query.order_by(Service.display_name).all()
+        
+        # Get unique statuses
+        statuses = db.session.query(Transaction.status).distinct().all()
+        status_options = [status[0] for status in statuses if status[0]]
+        
+        # Handle CSV export
+        if request.args.get('export') == 'csv':
+            import csv
+            import io
+            from flask import make_response
+            
+            output = io.StringIO()
+            writer = csv.writer(output)
+            
+            # Write header
+            writer.writerow([
+                'Unique ID', 'Client', 'Service', 'Status', 'Amount', 
+                'Mobile Number', 'Created At', 'Updated At'
+            ])
+            
+            # Write data
+            for transaction in transactions.items:
+                writer.writerow([
+                    transaction.unique_id,
+                    transaction.client.company_name,
+                    transaction.service.display_name,
+                    transaction.status,
+                    transaction.amount or '',
+                    transaction.mobile_number or '',
+                    transaction.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    transaction.updated_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.updated_at else ''
+                ])
+            
+            output.seek(0)
+            response = make_response(output.getvalue())
+            response.headers['Content-Type'] = 'text/csv'
+            response.headers['Content-Disposition'] = f'attachment; filename=transactions_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+            return response
 
-        return render_template("admin/transactions.html", transactions=transactions)
+        return render_template(
+            "admin/transactions.html", 
+            transactions=transactions,
+            clients=clients,
+            services=services,
+            status_options=status_options,
+            # Pass current filter values to maintain state
+            current_filters={
+                'start_date': start_date,
+                'end_date': end_date,
+                'client_id': client_id,
+                'service_id': service_id,
+                'status': status,
+                'amount_min': amount_min,
+                'amount_max': amount_max,
+                'search': search,
+                'search_type': search_type,
+                'sort_by': sort_by,
+                'sort_order': sort_order,
+                'per_page': per_page
+            }
+        )
     except Exception as e:
         flash(f"Error loading transactions: {str(e)}", "error")
         return redirect(url_for("admin.dashboard"))

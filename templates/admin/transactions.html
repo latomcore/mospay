@@ -19,6 +19,43 @@
 
     <!-- Custom styles for this template-->
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
+    
+    <style>
+        .filter-card {
+            background: #f8f9fc;
+            border: 1px solid #e3e6f0;
+        }
+        .filter-section {
+            border-bottom: 1px solid #e3e6f0;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .filter-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+        }
+        .sortable-header:hover {
+            background-color: #f8f9fc;
+        }
+        .sort-icon {
+            opacity: 0.5;
+        }
+        .sort-icon.active {
+            opacity: 1;
+        }
+        .table-responsive {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .filter-badge {
+            display: inline-block;
+            margin: 2px;
+        }
+    </style>
 
 </head>
 
@@ -122,14 +159,195 @@
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Transactions</h1>
+                        <div>
+                            <span class="badge badge-primary">{{ transactions.total }} total</span>
+                            <span class="badge badge-info">{{ transactions.items|length }} showing</span>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Filters -->
+                    <div class="card shadow mb-4 filter-card">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-filter"></i> Advanced Filters
+                                <button class="btn btn-sm btn-outline-primary float-right" type="button" data-toggle="collapse" data-target="#filterCollapse">
+                                    <i class="fas fa-chevron-down"></i> Toggle Filters
+                                </button>
+                            </h6>
+                        </div>
+                        <div class="collapse" id="filterCollapse">
+                            <div class="card-body">
+                                <form method="GET" id="filterForm">
+                                    <!-- Date Range Filter -->
+                                    <div class="filter-section">
+                                        <h6 class="text-primary mb-3"><i class="fas fa-calendar"></i> Date Range</h6>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label class="small">Start Date</label>
+                                                <input type="date" class="form-control form-control-sm" name="start_date" 
+                                                       value="{{ current_filters.start_date or '' }}">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="small">End Date</label>
+                                                <input type="date" class="form-control form-control-sm" name="end_date" 
+                                                       value="{{ current_filters.end_date or '' }}">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="small">Quick Date</label>
+                                                <select class="form-control form-control-sm" id="quickDate">
+                                                    <option value="">Select period</option>
+                                                    <option value="today">Today</option>
+                                                    <option value="yesterday">Yesterday</option>
+                                                    <option value="week">Last 7 days</option>
+                                                    <option value="month">Last 30 days</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Client & Service Filters -->
+                                    <div class="filter-section">
+                                        <h6 class="text-primary mb-3"><i class="fas fa-filter"></i> Client & Service</h6>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="small">Client</label>
+                                                <select class="form-control form-control-sm" name="client_id">
+                                                    <option value="">All Clients</option>
+                                                    {% for client in clients %}
+                                                    <option value="{{ client.id }}" 
+                                                            {% if current_filters.client_id == client.id %}selected{% endif %}>
+                                                        {{ client.company_name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="small">Service</label>
+                                                <select class="form-control form-control-sm" name="service_id">
+                                                    <option value="">All Services</option>
+                                                    {% for service in services %}
+                                                    <option value="{{ service.id }}" 
+                                                            {% if current_filters.service_id == service.id %}selected{% endif %}>
+                                                        {{ service.display_name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="small">Status</label>
+                                                <select class="form-control form-control-sm" name="status">
+                                                    <option value="">All Statuses</option>
+                                                    {% for status in status_options %}
+                                                    <option value="{{ status }}" 
+                                                            {% if current_filters.status == status %}selected{% endif %}>
+                                                        {{ status|title }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Amount Range Filter -->
+                                    <div class="filter-section">
+                                        <h6 class="text-primary mb-3"><i class="fas fa-dollar-sign"></i> Amount Range</h6>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label class="small">Min Amount</label>
+                                                <input type="number" class="form-control form-control-sm" name="amount_min" 
+                                                       value="{{ current_filters.amount_min or '' }}" step="0.01" min="0">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="small">Max Amount</label>
+                                                <input type="number" class="form-control form-control-sm" name="amount_max" 
+                                                       value="{{ current_filters.amount_max or '' }}" step="0.01" min="0">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Search Filter -->
+                                    <div class="filter-section">
+                                        <h6 class="text-primary mb-3"><i class="fas fa-search"></i> Search</h6>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="small">Search Type</label>
+                                                <select class="form-control form-control-sm" name="search_type">
+                                                    <option value="all" {% if current_filters.search_type == 'all' %}selected{% endif %}>All Fields</option>
+                                                    <option value="transaction_id" {% if current_filters.search_type == 'transaction_id' %}selected{% endif %}>Transaction ID</option>
+                                                    <option value="client_name" {% if current_filters.search_type == 'client_name' %}selected{% endif %}>Client Name</option>
+                                                    <option value="mobile_number" {% if current_filters.search_type == 'mobile_number' %}selected{% endif %}>Mobile Number</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="small">Search Term</label>
+                                                <input type="text" class="form-control form-control-sm" name="search" 
+                                                       value="{{ current_filters.search or '' }}" placeholder="Enter search term...">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sort & Display Options -->
+                                    <div class="filter-section">
+                                        <h6 class="text-primary mb-3"><i class="fas fa-sort"></i> Sort & Display</h6>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label class="small">Sort By</label>
+                                                <select class="form-control form-control-sm" name="sort_by">
+                                                    <option value="created_at" {% if current_filters.sort_by == 'created_at' %}selected{% endif %}>Date</option>
+                                                    <option value="amount" {% if current_filters.sort_by == 'amount' %}selected{% endif %}>Amount</option>
+                                                    <option value="status" {% if current_filters.sort_by == 'status' %}selected{% endif %}>Status</option>
+                                                    <option value="client" {% if current_filters.sort_by == 'client' %}selected{% endif %}>Client</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="small">Order</label>
+                                                <select class="form-control form-control-sm" name="sort_order">
+                                                    <option value="desc" {% if current_filters.sort_order == 'desc' %}selected{% endif %}>Descending</option>
+                                                    <option value="asc" {% if current_filters.sort_order == 'asc' %}selected{% endif %}>Ascending</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="small">Per Page</label>
+                                                <select class="form-control form-control-sm" name="per_page">
+                                                    <option value="25" {% if current_filters.per_page == 25 %}selected{% endif %}>25</option>
+                                                    <option value="50" {% if current_filters.per_page == 50 %}selected{% endif %}>50</option>
+                                                    <option value="100" {% if current_filters.per_page == 100 %}selected{% endif %}>100</option>
+                                                    <option value="200" {% if current_filters.per_page == 200 %}selected{% endif %}>200</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Filter Actions -->
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-search"></i> Apply Filters
+                                            </button>
+                                            <a href="{{ url_for('admin.transactions') }}" class="btn btn-secondary btn-sm">
+                                                <i class="fas fa-times"></i> Clear All
+                                            </a>
+                                            <button type="button" class="btn btn-info btn-sm" onclick="exportResults()">
+                                                <i class="fas fa-download"></i> Export
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Content Row -->
                     <div class="row">
                         <div class="col-12">
                             <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">All Transactions</h6>
+                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 font-weight-bold text-primary">Filtered Transactions</h6>
+                                    <div>
+                                        {% if current_filters.search or current_filters.start_date or current_filters.client_id or current_filters.service_id or current_filters.status %}
+                                        <span class="badge badge-warning">Filters Applied</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                                 <div class="card-body">
                                     {% if transactions.items %}
@@ -137,13 +355,28 @@
                                         <table class="table table-bordered" width="100%" cellspacing="0">
                                             <thead>
                                                 <tr>
-                                                    <th>Unique ID</th>
-                                                    <th>Client</th>
+                                                    <th class="sortable-header" data-sort="transaction_id">
+                                                        Unique ID
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </th>
+                                                    <th class="sortable-header" data-sort="client">
+                                                        Client
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </th>
                                                     <th>Service</th>
-                                                    <th>Status</th>
-                                                    <th>Amount</th>
+                                                    <th class="sortable-header" data-sort="status">
+                                                        Status
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </th>
+                                                    <th class="sortable-header" data-sort="amount">
+                                                        Amount
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </th>
                                                     <th>Mobile Number</th>
-                                                    <th>Created</th>
+                                                    <th class="sortable-header" data-sort="created_at">
+                                                        Created
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
@@ -174,14 +407,13 @@
                                         </table>
                                     </div>
 
-                                    <!-- Pagination -->
+                                    <!-- Enhanced Pagination -->
                                     {% if transactions.pages > 1 %}
                                     <nav aria-label="Page navigation">
                                         <ul class="pagination justify-content-center">
                                             {% if transactions.has_prev %}
                                             <li class="page-item">
-                                                <a class="page-link"
-                                                    href="{{ url_for('admin.transactions', page=transactions.prev_num) }}">Previous</a>
+                                                <a class="page-link" href="{{ url_for('admin.transactions', page=transactions.prev_num, **current_filters) }}">Previous</a>
                                             </li>
                                             {% endif %}
 
@@ -189,9 +421,7 @@
                                             {% if page_num %}
                                             {% if page_num != transactions.page %}
                                             <li class="page-item">
-                                                <a class="page-link"
-                                                    href="{{ url_for('admin.transactions', page=page_num) }}">{{
-                                                    page_num }}</a>
+                                                <a class="page-link" href="{{ url_for('admin.transactions', page=page_num, **current_filters) }}">{{ page_num }}</a>
                                             </li>
                                             {% else %}
                                             <li class="page-item active">
@@ -207,8 +437,7 @@
 
                                             {% if transactions.has_next %}
                                             <li class="page-item">
-                                                <a class="page-link"
-                                                    href="{{ url_for('admin.transactions', page=transactions.next_num) }}">Next</a>
+                                                <a class="page-link" href="{{ url_for('admin.transactions', page=transactions.next_num, **current_filters) }}">Next</a>
                                             </li>
                                             {% endif %}
                                         </ul>
@@ -259,6 +488,117 @@
 
     <!-- Custom scripts for all pages-->
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+
+    <!-- Advanced Filtering JavaScript -->
+    <script>
+        // Quick date selection
+        document.getElementById('quickDate').addEventListener('change', function() {
+            const today = new Date();
+            const startDateInput = document.querySelector('input[name="start_date"]');
+            const endDateInput = document.querySelector('input[name="end_date"]');
+            
+            switch(this.value) {
+                case 'today':
+                    startDateInput.value = today.toISOString().split('T')[0];
+                    endDateInput.value = today.toISOString().split('T')[0];
+                    break;
+                case 'yesterday':
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    startDateInput.value = yesterday.toISOString().split('T')[0];
+                    endDateInput.value = yesterday.toISOString().split('T')[0];
+                    break;
+                case 'week':
+                    const weekAgo = new Date(today);
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    startDateInput.value = weekAgo.toISOString().split('T')[0];
+                    endDateInput.value = today.toISOString().split('T')[0];
+                    break;
+                case 'month':
+                    const monthAgo = new Date(today);
+                    monthAgo.setDate(monthAgo.getDate() - 30);
+                    startDateInput.value = monthAgo.toISOString().split('T')[0];
+                    endDateInput.value = today.toISOString().split('T')[0];
+                    break;
+            }
+        });
+
+        // Sortable table headers
+        document.querySelectorAll('.sortable-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const sortBy = this.dataset.sort;
+                const currentSort = '{{ current_filters.sort_by }}';
+                const currentOrder = '{{ current_filters.sort_order }}';
+                
+                let newOrder = 'asc';
+                if (currentSort === sortBy && currentOrder === 'asc') {
+                    newOrder = 'desc';
+                }
+                
+                // Update form inputs
+                document.querySelector('select[name="sort_by"]').value = sortBy;
+                document.querySelector('select[name="sort_order"]').value = newOrder;
+                
+                // Submit form
+                document.getElementById('filterForm').submit();
+            });
+        });
+
+        // Update sort icons
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentSort = '{{ current_filters.sort_by }}';
+            const currentOrder = '{{ current_filters.sort_order }}';
+            
+            document.querySelectorAll('.sortable-header').forEach(header => {
+                const sortIcon = header.querySelector('.sort-icon');
+                if (header.dataset.sort === currentSort) {
+                    sortIcon.classList.add('active');
+                    if (currentOrder === 'asc') {
+                        sortIcon.className = 'fas fa-sort-up sort-icon active';
+                    } else {
+                        sortIcon.className = 'fas fa-sort-down sort-icon active';
+                    }
+                }
+            });
+        });
+
+        // Export functionality
+        function exportResults() {
+            const form = document.getElementById('filterForm');
+            const formData = new FormData(form);
+            const params = new URLSearchParams(formData);
+            
+            // Create export URL
+            const exportUrl = '{{ url_for("admin.transactions") }}?' + params.toString() + '&export=csv';
+            
+            // Create temporary link and click it
+            const link = document.createElement('a');
+            link.href = exportUrl;
+            link.download = 'transactions_export.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Auto-submit form on filter change (optional)
+        document.querySelectorAll('select[name="per_page"]').forEach(select => {
+            select.addEventListener('change', function() {
+                document.getElementById('filterForm').submit();
+            });
+        });
+
+        // Show/hide filters based on URL parameters
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasFilters = urlParams.has('start_date') || urlParams.has('client_id') || 
+                             urlParams.has('service_id') || urlParams.has('status') || 
+                             urlParams.has('search') || urlParams.has('amount_min');
+            
+            if (hasFilters) {
+                document.getElementById('filterCollapse').classList.add('show');
+            }
+        });
+    </script>
 
 </body>
 
