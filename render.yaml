@@ -3,7 +3,6 @@ services:
     name: mospay
     env: python
     plan: free
-    runtime: python-3.11.9
     buildCommand: |
       python --version
       pip install --upgrade pip
