@@ -589,31 +589,173 @@
                         <!-- Recent Activity -->
                         <div class="col-xl-6 col-lg-6">
                             <div class="card shadow mb-4">
-                                <div class="card-header py-3">
+                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
                                     <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
+                                    <a href="{{ url_for('admin.transactions', client_id=client.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-external-link-alt"></i> View All
+                                    </a>
                                 </div>
                                 <div class="card-body">
-                                    <div class="activity-timeline">
-                                        {% if recent_transactions %}
-                                        {% for transaction in recent_transactions %}
-                                        <div class="timeline-item {{ 'success' if transaction.status == 'completed' else 'warning' if transaction.status == 'pending' else 'danger' }}">
-                                            <div class="small text-gray-500">{{ transaction.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-                                            <div class="font-weight-bold">{{ transaction.unique_id[:12] }}...</div>
-                                            <div class="small text-gray-600">{{ transaction.service.display_name }}</div>
-                                            <div class="small">
-                                                <span class="badge badge-{{ 'success' if transaction.status == 'completed' else 'warning' if transaction.status == 'pending' else 'danger' }}">
-                                                    {{ transaction.status }}
-                                                </span>
-                                                {% if transaction.amount %}
-                                                <span class="text-muted">${{ "{:,.2f}".format(transaction.amount) }}</span>
-                                                {% endif %}
+                                    {% if recent_transactions %}
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Service</th>
+                                                    <th>Status</th>
+                                                    <th>Amount</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for transaction in recent_transactions %}
+                                                <tr>
+                                                    <td>
+                                                        <code class="small">{{ transaction.unique_id[:8] }}...</code>
+                                                    </td>
+                                                    <td>
+                                                        <small>{{ transaction.service.display_name }}</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge badge-{{ 'success' if transaction.status == 'completed' else 'warning' if transaction.status == 'pending' else 'danger' }} badge-sm">
+                                                            {{ transaction.status }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {% if transaction.amount %}
+                                                        <small class="font-weight-bold">${{ "{:,.2f}".format(transaction.amount) }}</small>
+                                                        {% else %}
+                                                        <small class="text-muted">N/A</small>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <small>{{ transaction.created_at.strftime('%m/%d %H:%M') }}</small>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-exchange-alt fa-2x text-gray-300 mb-2"></i>
+                                        <p class="text-muted mb-0">No recent transactions</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- All Client Transactions with Filters -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 font-weight-bold text-primary">All Transactions for {{ client.company_name }}</h6>
+                                    <div>
+                                        <button class="btn btn-sm btn-info" onclick="exportClientTransactions()">
+                                            <i class="fas fa-download"></i> Export
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Client Transaction Filters -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label class="small">Date Range</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="date" class="form-control" id="clientStartDate" placeholder="Start Date">
+                                                <input type="date" class="form-control" id="clientEndDate" placeholder="End Date">
                                             </div>
                                         </div>
-                                        {% endfor %}
-                                        {% else %}
-                                        <p class="text-muted">No recent transactions</p>
-                                        {% endif %}
+                                        <div class="col-md-2">
+                                            <label class="small">Service</label>
+                                            <select class="form-control form-control-sm" id="clientServiceFilter">
+                                                <option value="">All Services</option>
+                                                {% for service in services %}
+                                                <option value="{{ service.id }}">{{ service.display_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="small">Status</label>
+                                            <select class="form-control form-control-sm" id="clientStatusFilter">
+                                                <option value="">All Statuses</option>
+                                                <option value="completed">Completed</option>
+                                                <option value="pending">Pending</option>
+                                                <option value="failed">Failed</option>
+                                                <option value="cancelled">Cancelled</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="small">Amount Range</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="number" class="form-control" id="clientMinAmount" placeholder="Min" step="0.01">
+                                                <input type="number" class="form-control" id="clientMaxAmount" placeholder="Max" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="small">Search</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="text" class="form-control" id="clientSearch" placeholder="Transaction ID...">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-primary" type="button" onclick="filterClientTransactions()">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="small">&nbsp;</label>
+                                            <button class="btn btn-secondary btn-sm btn-block" onclick="clearClientFilters()">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
                                     </div>
+
+                                    <!-- Client Transactions Table -->
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" id="clientTransactionsTable">
+                                            <thead>
+                                                <tr>
+                                                    <th class="sortable-header" data-sort="unique_id">
+                                                        Transaction ID
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </th>
+                                                    <th class="sortable-header" data-sort="service">
+                                                        Service
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </th>
+                                                    <th class="sortable-header" data-sort="status">
+                                                        Status
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </th>
+                                                    <th class="sortable-header" data-sort="amount">
+                                                        Amount
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </th>
+                                                    <th>Mobile Number</th>
+                                                    <th class="sortable-header" data-sort="created_at">
+                                                        Created
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="clientTransactionsBody">
+                                                <!-- Transactions will be loaded here via JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Pagination for Client Transactions -->
+                                    <nav aria-label="Client transactions pagination">
+                                        <ul class="pagination justify-content-center" id="clientTransactionsPagination">
+                                            <!-- Pagination will be generated here -->
+                                        </ul>
+                                    </nav>
                                 </div>
                             </div>
                         </div>
@@ -769,6 +911,214 @@
                     }
                 }
             }
+        });
+
+        // Client Transactions Management
+        let currentClientPage = 1;
+        let currentClientSort = 'created_at';
+        let currentClientOrder = 'desc';
+        const clientId = {{ client.id }};
+
+        // Load client transactions
+        function loadClientTransactions(page = 1, sortBy = 'created_at', sortOrder = 'desc') {
+            const filters = {
+                page: page,
+                sort_by: sortBy,
+                sort_order: sortOrder,
+                start_date: document.getElementById('clientStartDate').value,
+                end_date: document.getElementById('clientEndDate').value,
+                service_id: document.getElementById('clientServiceFilter').value,
+                status: document.getElementById('clientStatusFilter').value,
+                amount_min: document.getElementById('clientMinAmount').value,
+                amount_max: document.getElementById('clientMaxAmount').value,
+                search: document.getElementById('clientSearch').value
+            };
+
+            // Remove empty filters
+            Object.keys(filters).forEach(key => {
+                if (filters[key] === '' || filters[key] === null) {
+                    delete filters[key];
+                }
+            });
+
+            const params = new URLSearchParams(filters);
+            
+            fetch(`/admin/api/clients/${clientId}/transactions?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error loading transactions:', data.error);
+                        return;
+                    }
+                    
+                    // Update table body
+                    const tbody = document.getElementById('clientTransactionsBody');
+                    tbody.innerHTML = '';
+                    
+                    if (data.transactions.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No transactions found</td></tr>';
+                    } else {
+                        data.transactions.forEach(transaction => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td><code class="small">${transaction.unique_id.substring(0, 8)}...</code></td>
+                                <td><small>${transaction.service_name}</small></td>
+                                <td>
+                                    <span class="badge badge-${getStatusBadgeClass(transaction.status)} badge-sm">
+                                        ${transaction.status}
+                                    </span>
+                                </td>
+                                <td>
+                                    ${transaction.amount ? `<small class="font-weight-bold">$${parseFloat(transaction.amount).toFixed(2)}</small>` : '<small class="text-muted">N/A</small>'}
+                                </td>
+                                <td><small>${transaction.mobile_number || 'N/A'}</small></td>
+                                <td><small>${new Date(transaction.created_at).toLocaleDateString()} ${new Date(transaction.created_at).toLocaleTimeString()}</small></td>
+                                <td>
+                                    <a href="/admin/transactions/${transaction.unique_id}" class="btn btn-sm btn-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    }
+                    
+                    // Update pagination
+                    updateClientPagination(data.pagination);
+                })
+                .catch(error => {
+                    console.error('Error loading transactions:', error);
+                    document.getElementById('clientTransactionsBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error loading transactions</td></tr>';
+                });
+        }
+
+        // Helper function to get status badge class
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'completed': return 'success';
+                case 'pending': return 'warning';
+                case 'failed': return 'danger';
+                case 'cancelled': return 'secondary';
+                default: return 'secondary';
+            }
+        }
+
+        // Update pagination
+        function updateClientPagination(pagination) {
+            const paginationContainer = document.getElementById('clientTransactionsPagination');
+            paginationContainer.innerHTML = '';
+            
+            if (pagination.pages <= 1) return;
+            
+            // Previous button
+            if (pagination.has_prev) {
+                const prevLi = document.createElement('li');
+                prevLi.className = 'page-item';
+                prevLi.innerHTML = `<a class="page-link" href="#" onclick="loadClientTransactions(${pagination.prev_num}, '${currentClientSort}', '${currentClientOrder}')">Previous</a>`;
+                paginationContainer.appendChild(prevLi);
+            }
+            
+            // Page numbers
+            for (let i = 1; i <= pagination.pages; i++) {
+                if (i === pagination.page || (i >= pagination.page - 2 && i <= pagination.page + 2)) {
+                    const pageLi = document.createElement('li');
+                    pageLi.className = `page-item ${i === pagination.page ? 'active' : ''}`;
+                    pageLi.innerHTML = `<a class="page-link" href="#" onclick="loadClientTransactions(${i}, '${currentClientSort}', '${currentClientOrder}')">${i}</a>`;
+                    paginationContainer.appendChild(pageLi);
+                } else if (i === 1 || i === pagination.pages) {
+                    const pageLi = document.createElement('li');
+                    pageLi.className = 'page-item';
+                    pageLi.innerHTML = `<a class="page-link" href="#" onclick="loadClientTransactions(${i}, '${currentClientSort}', '${currentClientOrder}')">${i}</a>`;
+                    paginationContainer.appendChild(pageLi);
+                } else if (i === pagination.page - 3 || i === pagination.page + 3) {
+                    const ellipsisLi = document.createElement('li');
+                    ellipsisLi.className = 'page-item disabled';
+                    ellipsisLi.innerHTML = '<span class="page-link">...</span>';
+                    paginationContainer.appendChild(ellipsisLi);
+                }
+            }
+            
+            // Next button
+            if (pagination.has_next) {
+                const nextLi = document.createElement('li');
+                nextLi.className = 'page-item';
+                nextLi.innerHTML = `<a class="page-link" href="#" onclick="loadClientTransactions(${pagination.next_num}, '${currentClientSort}', '${currentClientOrder}')">Next</a>`;
+                paginationContainer.appendChild(nextLi);
+            }
+        }
+
+        // Filter client transactions
+        function filterClientTransactions() {
+            currentClientPage = 1;
+            loadClientTransactions(currentClientPage, currentClientSort, currentClientOrder);
+        }
+
+        // Clear client filters
+        function clearClientFilters() {
+            document.getElementById('clientStartDate').value = '';
+            document.getElementById('clientEndDate').value = '';
+            document.getElementById('clientServiceFilter').value = '';
+            document.getElementById('clientStatusFilter').value = '';
+            document.getElementById('clientMinAmount').value = '';
+            document.getElementById('clientMaxAmount').value = '';
+            document.getElementById('clientSearch').value = '';
+            filterClientTransactions();
+        }
+
+        // Export client transactions
+        function exportClientTransactions() {
+            const filters = {
+                export: 'csv',
+                start_date: document.getElementById('clientStartDate').value,
+                end_date: document.getElementById('clientEndDate').value,
+                service_id: document.getElementById('clientServiceFilter').value,
+                status: document.getElementById('clientStatusFilter').value,
+                amount_min: document.getElementById('clientMinAmount').value,
+                amount_max: document.getElementById('clientMaxAmount').value,
+                search: document.getElementById('clientSearch').value
+            };
+
+            // Remove empty filters
+            Object.keys(filters).forEach(key => {
+                if (filters[key] === '' || filters[key] === null) {
+                    delete filters[key];
+                }
+            });
+
+            const params = new URLSearchParams(filters);
+            const exportUrl = `/admin/api/clients/${clientId}/transactions?${params.toString()}`;
+            
+            // Create temporary link and click it
+            const link = document.createElement('a');
+            link.href = exportUrl;
+            link.download = `{{ client.company_name }}_transactions_export.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Sortable headers for client transactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers to sortable headers
+            document.querySelectorAll('#clientTransactionsTable .sortable-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    const sortBy = this.dataset.sort;
+                    let newOrder = 'asc';
+                    
+                    if (currentClientSort === sortBy && currentClientOrder === 'asc') {
+                        newOrder = 'desc';
+                    }
+                    
+                    currentClientSort = sortBy;
+                    currentClientOrder = newOrder;
+                    currentClientPage = 1;
+                    
+                    loadClientTransactions(currentClientPage, currentClientSort, currentClientOrder);
+                });
+            });
+
+            // Load initial transactions
+            loadClientTransactions();
         });
 
     </script>

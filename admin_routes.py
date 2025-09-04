@@ -1090,3 +1090,156 @@ def regenerate_credentials(client_id):
 
     print(f"DEBUG: Returning redirect to client view")
     return redirect(url_for("admin.view_client", client_id=client_id))
+
+
+@admin.route("/api/clients/<int:client_id>/transactions")
+@admin_required
+def client_transactions_api(client_id):
+    """API endpoint for client transactions with filtering and pagination"""
+    try:
+        from datetime import datetime
+        
+        # Get filter parameters
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 25, type=int)
+        
+        # Date range filters
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
+        
+        # Filter parameters
+        service_id = request.args.get("service_id", type=int)
+        status = request.args.get("status")
+        amount_min = request.args.get("amount_min", type=float)
+        amount_max = request.args.get("amount_max", type=float)
+        
+        # Search parameters
+        search = request.args.get("search", "").strip()
+        
+        # Sort parameters
+        sort_by = request.args.get("sort_by", "created_at")
+        sort_order = request.args.get("sort_order", "desc")
+        
+        # Build query for this specific client
+        query = Transaction.query.filter_by(client_id=client_id)
+        
+        # Apply date filters
+        if start_date:
+            try:
+                start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
+                query = query.filter(Transaction.created_at >= start_datetime)
+            except ValueError:
+                pass
+                
+        if end_date:
+            try:
+                end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
+                from datetime import timedelta
+                end_datetime = end_datetime + timedelta(days=1)
+                query = query.filter(Transaction.created_at < end_datetime)
+            except ValueError:
+                pass
+        
+        # Apply service filter
+        if service_id:
+            query = query.filter(Transaction.service_id == service_id)
+            
+        # Apply status filter
+        if status:
+            query = query.filter(Transaction.status == status)
+            
+        # Apply amount filters
+        if amount_min is not None:
+            query = query.filter(Transaction.amount >= amount_min)
+        if amount_max is not None:
+            query = query.filter(Transaction.amount <= amount_max)
+            
+        # Apply search filters
+        if search:
+            query = query.filter(Transaction.unique_id.ilike(f"%{search}%"))
+        
+        # Apply sorting
+        if sort_by == "amount":
+            sort_column = Transaction.amount
+        elif sort_by == "status":
+            sort_column = Transaction.status
+        elif sort_by == "service":
+            sort_column = Service.display_name
+            query = query.join(Service)
+        else:  # default to created_at
+            sort_column = Transaction.created_at
+            
+        if sort_order == "asc":
+            query = query.order_by(sort_column.asc())
+        else:
+            query = query.order_by(sort_column.desc())
+        
+        # Handle CSV export
+        if request.args.get('export') == 'csv':
+            import csv
+            import io
+            from flask import make_response
+            
+            # Get all transactions for export (no pagination)
+            all_transactions = query.all()
+            
+            output = io.StringIO()
+            writer = csv.writer(output)
+            
+            # Write header
+            writer.writerow([
+                'Transaction ID', 'Service', 'Status', 'Amount', 
+                'Mobile Number', 'Created At', 'Updated At'
+            ])
+            
+            # Write data
+            for transaction in all_transactions:
+                writer.writerow([
+                    transaction.unique_id,
+                    transaction.service.display_name,
+                    transaction.status,
+                    transaction.amount or '',
+                    transaction.mobile_number or '',
+                    transaction.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    transaction.updated_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.updated_at else ''
+                ])
+            
+            output.seek(0)
+            response = make_response(output.getvalue())
+            response.headers['Content-Type'] = 'text/csv'
+            response.headers['Content-Disposition'] = f'attachment; filename=client_{client_id}_transactions_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+            return response
+        
+        # Paginate results
+        transactions = query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        # Return JSON response
+        return jsonify({
+            'transactions': [{
+                'id': t.id,
+                'unique_id': t.unique_id,
+                'service_name': t.service.display_name,
+                'status': t.status,
+                'amount': float(t.amount) if t.amount else None,
+                'mobile_number': t.mobile_number,
+                'created_at': t.created_at.isoformat(),
+                'updated_at': t.updated_at.isoformat() if t.updated_at else None
+            } for t in transactions.items],
+            'pagination': {
+                'page': transactions.page,
+                'pages': transactions.pages,
+                'per_page': transactions.per_page,
+                'total': transactions.total,
+                'has_prev': transactions.has_prev,
+                'has_next': transactions.has_next,
+                'prev_num': transactions.prev_num,
+                'next_num': transactions.next_num
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
