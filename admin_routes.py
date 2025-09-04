@@ -122,14 +122,65 @@ def _create_status_function_for(
 @admin.route("/dashboard")
 @admin_required
 def dashboard():
-    """Admin dashboard"""
+    """Enhanced admin dashboard with real-time metrics"""
     try:
-        # Get statistics
+        from datetime import datetime, timedelta
+        
+        # Basic statistics
         total_clients = Client.query.count()
         total_services = Service.query.count()
         total_transactions = Transaction.query.count()
         active_clients = Client.query.filter_by(is_active=True).count()
-
+        
+        # Enhanced statistics
+        today = datetime.now().date()
+        yesterday = today - timedelta(days=1)
+        this_month = today.replace(day=1)
+        last_month = (this_month - timedelta(days=1)).replace(day=1)
+        
+        # Today's metrics
+        today_transactions = Transaction.query.filter(
+            db.func.date(Transaction.created_at) == today
+        ).count()
+        
+        # This month's metrics
+        month_transactions = Transaction.query.filter(
+            db.func.date(Transaction.created_at) >= this_month
+        ).count()
+        
+        # Success rate (last 24 hours)
+        last_24h = datetime.now() - timedelta(hours=24)
+        recent_transactions_count = Transaction.query.filter(
+            Transaction.created_at >= last_24h
+        ).count()
+        
+        successful_transactions = Transaction.query.filter(
+            Transaction.created_at >= last_24h,
+            Transaction.status == 'completed'
+        ).count()
+        
+        success_rate = (successful_transactions / recent_transactions_count * 100) if recent_transactions_count > 0 else 0
+        
+        # Revenue calculations (assuming amount field exists)
+        today_revenue = db.session.query(db.func.sum(Transaction.amount)).filter(
+            db.func.date(Transaction.created_at) == today,
+            Transaction.status == 'completed'
+        ).scalar() or 0
+        
+        month_revenue = db.session.query(db.func.sum(Transaction.amount)).filter(
+            db.func.date(Transaction.created_at) >= this_month,
+            Transaction.status == 'completed'
+        ).scalar() or 0
+        
+        # Transaction volume by service (for charts)
+        service_stats = db.session.query(
+            Service.name,
+            Service.display_name,
+            db.func.count(Transaction.id).label('count')
+        ).join(Transaction, Service.id == Transaction.service_id).filter(
+            Transaction.created_at >= last_24h
+        ).group_by(Service.id, Service.name, Service.display_name).all()
+        
         # Recent transactions
         recent_transactions = (
             Transaction.query.order_by(Transaction.created_at.desc()).limit(10).all()
@@ -137,13 +188,37 @@ def dashboard():
 
         # Recent API logs
         recent_logs = ApiLog.query.order_by(ApiLog.created_at.desc()).limit(10).all()
+        
+        # Transaction trends (last 7 days for charts)
+        last_7_days = []
+        for i in range(7):
+            date = today - timedelta(days=i)
+            count = Transaction.query.filter(
+                db.func.date(Transaction.created_at) == date
+            ).count()
+            last_7_days.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'count': count
+            })
+        last_7_days.reverse()  # Show oldest to newest
 
         return render_template(
             "admin/dashboard.html",
+            # Basic stats
             total_clients=total_clients,
             total_services=total_services,
             total_transactions=total_transactions,
             active_clients=active_clients,
+            # Enhanced stats
+            today_transactions=today_transactions,
+            month_transactions=month_transactions,
+            success_rate=round(success_rate, 1),
+            today_revenue=today_revenue,
+            month_revenue=month_revenue,
+            # Chart data
+            service_stats=service_stats,
+            transaction_trends=last_7_days,
+            # Recent data
             recent_transactions=recent_transactions,
             recent_logs=recent_logs,
         )

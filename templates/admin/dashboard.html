@@ -19,6 +19,43 @@
 
     <!-- Custom styles for this template-->
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
+    
+    <!-- Chart.js for real-time charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        .metric-card {
+            transition: transform 0.2s ease-in-out;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .metric-change {
+            font-size: 0.875rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .activity-item {
+            border-left: 3px solid #e3e6f0;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        .activity-item.success {
+            border-left-color: #1cc88a;
+        }
+        .activity-item.warning {
+            border-left-color: #f6c23e;
+        }
+        .activity-item.danger {
+            border-left-color: #e74a3b;
+        }
+    </style>
 
 </head>
 
@@ -179,60 +216,66 @@
                         <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
                     </div>
 
-                    <!-- Content Row -->
+                    <!-- Enhanced Stats Row -->
                     <div class="row">
 
-                        <!-- Total Clients Card -->
+                        <!-- Today's Transactions Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card border-left-primary shadow h-100 py-2 metric-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Total Clients</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_clients }}
+                                                Today's Transactions</div>
+                                            <div class="metric-value text-gray-800">{{ today_transactions }}</div>
+                                            <div class="metric-change text-success">
+                                                <i class="fas fa-arrow-up"></i> {{ month_transactions }} this month
                                             </div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                                            <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Total Services Card -->
+                        <!-- Success Rate Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card border-left-success shadow h-100 py-2 metric-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Total Services</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_services }}
+                                                Success Rate (24h)</div>
+                                            <div class="metric-value text-gray-800">{{ success_rate }}%</div>
+                                            <div class="metric-change text-success">
+                                                <i class="fas fa-check-circle"></i> Last 24 hours
                                             </div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-cogs fa-2x text-gray-300"></i>
+                                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Total Transactions Card -->
+                        <!-- Today's Revenue Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card border-left-info shadow h-100 py-2 metric-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                                Total Transactions</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_transactions }}
+                                                Today's Revenue</div>
+                                            <div class="metric-value text-gray-800">${{ "{:,.2f}".format(today_revenue) }}</div>
+                                            <div class="metric-change text-info">
+                                                <i class="fas fa-dollar-sign"></i> ${{ "{:,.2f}".format(month_revenue) }} this month
                                             </div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-exchange-alt fa-2x text-gray-300"></i>
+                                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -241,18 +284,51 @@
 
                         <!-- Active Clients Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card border-left-warning shadow h-100 py-2 metric-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                                 Active Clients</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_clients }}
+                                            <div class="metric-value text-gray-800">{{ active_clients }}</div>
+                                            <div class="metric-change text-warning">
+                                                <i class="fas fa-users"></i> {{ total_clients }} total
                                             </div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-user-check fa-2x text-gray-300"></i>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="row">
+                        <!-- Transaction Volume Chart -->
+                        <div class="col-xl-8 col-lg-7">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Transaction Volume (Last 7 Days)</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="transactionVolumeChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Service Distribution Chart -->
+                        <div class="col-xl-4 col-lg-5">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Service Distribution (24h)</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="serviceDistributionChart"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -313,37 +389,35 @@
                             </div>
                         </div>
 
-                        <!-- Recent API Logs -->
+                        <!-- Enhanced Activity Feed -->
                         <div class="col-xl-4 col-lg-5">
                             <div class="card shadow mb-4">
                                 <!-- Card Header - Dropdown -->
                                 <div
                                     class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Recent API Calls</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
                                     <a href="{{ url_for('admin.api_logs') }}" class="btn btn-sm btn-primary">View
                                         All</a>
                                 </div>
                                 <!-- Card Body -->
                                 <div class="card-body">
                                     {% if recent_logs %}
-                                    {% for log in recent_logs[:5] %}
-                                    <div class="mb-3">
-                                        <div class="small text-gray-500">{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}
-                                        </div>
+                                    {% for log in recent_logs[:8] %}
+                                    <div class="activity-item {{ 'success' if log.status_code == 200 else 'warning' if log.status_code < 400 else 'danger' }}">
+                                        <div class="small text-gray-500">{{ log.created_at.strftime('%H:%M') }}</div>
                                         <div class="font-weight-bold">{{ log.client.company_name }}</div>
-                                        <div class="small text-gray-600">{{ log.endpoint }} ({{ log.method }})</div>
+                                        <div class="small text-gray-600">{{ log.endpoint }}</div>
                                         <div class="small">
                                             <span
                                                 class="badge badge-{{ 'success' if log.status_code == 200 else 'warning' if log.status_code < 400 else 'danger' }}">
                                                 {{ log.status_code }}
                                             </span>
+                                            <span class="text-muted">{{ log.method }}</span>
                                         </div>
                                     </div>
-                                    {% if not loop.last %}
-                                    <hr>{% endif %}
                                     {% endfor %}
                                     {% else %}
-                                    <p class="text-muted">No recent API calls</p>
+                                    <p class="text-muted">No recent activity</p>
                                     {% endif %}
                                 </div>
                             </div>
@@ -386,6 +460,89 @@
 
     <!-- Custom scripts for all pages-->
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+
+    <!-- Dashboard Charts -->
+    <script>
+        // Transaction Volume Chart
+        const transactionCtx = document.getElementById('transactionVolumeChart').getContext('2d');
+        const transactionChart = new Chart(transactionCtx, {
+            type: 'line',
+            data: {
+                labels: [
+                    {% for trend in transaction_trends %}
+                    '{{ trend.date }}'{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'Transactions',
+                    data: [
+                        {% for trend in transaction_trends %}
+                        {{ trend.count }}{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Service Distribution Chart
+        const serviceCtx = document.getElementById('serviceDistributionChart').getContext('2d');
+        const serviceChart = new Chart(serviceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    {% for service in service_stats %}
+                    '{{ service.display_name }}'{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for service in service_stats %}
+                        {{ service.count }}{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        '#4e73df',
+                        '#1cc88a',
+                        '#36b9cc',
+                        '#f6c23e',
+                        '#e74a3b'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Auto-refresh dashboard every 30 seconds
+        setInterval(function() {
+            location.reload();
+        }, 30000);
+    </script>
 
 </body>
 
