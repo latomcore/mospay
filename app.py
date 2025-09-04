@@ -17,6 +17,14 @@ def create_app():
     if os.environ.get("FLASK_ENV") == "production":
         app.config["DEBUG"] = False
         app.config["TESTING"] = False
+        # Production database configuration
+        if os.environ.get("DATABASE_URL"):
+            app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+        # Production secret keys
+        if os.environ.get("SECRET_KEY"):
+            app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+        if os.environ.get("JWT_SECRET_KEY"):
+            app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
 
     # Initialize extensions
     db.init_app(app)
@@ -59,10 +67,20 @@ def create_app():
     # Create database tables
     with app.app_context():
         try:
+            # Test database connection first
+            from sqlalchemy import text
+            db.session.execute(text("SELECT 1"))
+            print("Database connection successful")
+            
+            # Create tables
             db.create_all()
+            print("Database tables created successfully")
         except Exception as e:
-            print(f"Warning: Could not create database tables: {e}")
-            print("This might be due to connection issues. Tables may already exist.")
+            print(f"Database error: {e}")
+            print("This might be due to connection issues or missing environment variables.")
+            # Don't exit in production, let the app start and handle errors gracefully
+            if os.environ.get("FLASK_ENV") != "production":
+                raise
 
         # Create default super admin user if it doesn't exist
         if not User.query.filter_by(role="super_admin").first():
