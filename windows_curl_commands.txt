@@ -37,3 +37,4 @@ python test_windows_curl.py
 
 RESULT: The endpoint is working! The 500 error is expected because the PostgreSQL function doesn't exist yet.
 The system will automatically create a default function when needed.
+

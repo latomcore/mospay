@@ -58,3 +58,4 @@ def ensure_db_connection():
         except:
             pass
         return False
+
