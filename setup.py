@@ -6,7 +6,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "Flask==3.0.0",
-        "psycopg2-binary==2.8.6",
+        "psycopg==3.1.18",
         "Flask-SQLAlchemy==3.1.1",
         "Flask-JWT-Extended==4.6.0",
         "Flask-Bcrypt==1.0.1",
