@@ -191,6 +191,12 @@ def dashboard():
         # Recent API logs
         recent_logs = ApiLog.query.order_by(ApiLog.created_at.desc()).limit(10).all()
         
+        # Alert statistics
+        active_alerts = Alert.query.filter_by(status='active').count()
+        critical_alerts = Alert.query.filter_by(status='active', severity='critical').count()
+        warning_alerts = Alert.query.filter_by(status='active', severity='warning').count()
+        total_alert_rules = AlertRule.query.filter_by(is_active=True).count()
+        
         # Transaction trends (last 7 days for charts)
         last_7_days = []
         for i in range(7):
@@ -217,6 +223,11 @@ def dashboard():
             success_rate=round(success_rate, 1),
             today_revenue=today_revenue,
             month_revenue=month_revenue,
+            # Alert stats
+            active_alerts=active_alerts,
+            critical_alerts=critical_alerts,
+            warning_alerts=warning_alerts,
+            total_alert_rules=total_alert_rules,
             # Chart data
             service_stats=service_stats,
             transaction_trends=last_7_days,
