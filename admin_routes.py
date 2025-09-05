@@ -2906,11 +2906,13 @@ def bulk_import_clients():
         db.session.commit()
         
         if errors:
-            flash(f"Imported {imported_count} clients with {len(errors)} errors", "warning")
+            flash(f"Import completed: {imported_count} clients imported successfully, {len(errors)} errors occurred", "warning")
             for error in errors[:5]:  # Show first 5 errors
                 flash(error, "error")
+            if len(errors) > 5:
+                flash(f"... and {len(errors) - 5} more errors", "error")
         else:
-            flash(f"Successfully imported {imported_count} clients", "success")
+            flash(f"✅ Successfully imported {imported_count} client(s)!", "success")
         
     except Exception as e:
         import traceback
