@@ -1636,10 +1636,14 @@ def bulk_export():
 def bulk_export_transactions():
     """Export transactions for multiple clients"""
     try:
+        print("[BULK EXPORT] Starting export function...")
+        
         from datetime import datetime, timedelta
         import csv
         import io
         from flask import make_response
+        
+        print("[BULK EXPORT] Imports successful...")
         
         # Debug logging
         print(f"[BULK EXPORT] Form data received: {request.form}")
@@ -1647,6 +1651,7 @@ def bulk_export_transactions():
         print(f"[BULK EXPORT] Request URL: {request.url}")
         
         # Get export parameters
+        print("[BULK EXPORT] Getting form parameters...")
         client_ids = request.form.getlist("client_ids")
         service_ids = request.form.getlist("service_ids")
         statuses = request.form.getlist("statuses")
@@ -1712,84 +1717,95 @@ def bulk_export_transactions():
             return redirect(url_for("admin.bulk_export"))
             
     except Exception as e:
+        import traceback
+        print(f"[BULK EXPORT] ERROR: {str(e)}")
+        print(f"[BULK EXPORT] Traceback: {traceback.format_exc()}")
         flash(f"Error exporting transactions: {str(e)}", "error")
         return redirect(url_for("admin.bulk_export"))
 
 
 def _export_transactions_csv(transactions, client_ids, start_date, end_date):
     """Helper function to export transactions as CSV"""
-    import csv
-    import io
-    from flask import make_response
-    from datetime import datetime
-    
-    print(f"[CSV EXPORT] Starting CSV export for {len(transactions)} transactions")
-    
-    output = io.StringIO()
-    writer = csv.writer(output)
-    
-    # Write header
-    writer.writerow([
-        'Transaction ID', 'Client', 'Service', 'Status', 'Amount', 
-        'Mobile Number', 'Created At', 'Updated At', 'Client App ID'
-    ])
-    
-    # Write data
-    for transaction in transactions:
-        try:
-            writer.writerow([
-                transaction.unique_id or '',
-                transaction.client.company_name if transaction.client else 'Unknown Client',
-                transaction.service.display_name if transaction.service else 'Unknown Service',
-                transaction.status or '',
-                transaction.amount or '',
-                transaction.mobile_number or '',
-                transaction.created_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.created_at else '',
-                transaction.updated_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.updated_at else '',
-                transaction.client.app_id if transaction.client else ''
-            ])
-        except Exception as e:
-            print(f"[CSV EXPORT] Error writing transaction {transaction.id}: {str(e)}")
-            # Write a row with error info
-            writer.writerow([
-                transaction.unique_id or 'ERROR',
-                'ERROR',
-                'ERROR', 
-                'ERROR',
-                'ERROR',
-                'ERROR',
-                'ERROR',
-                'ERROR',
-                'ERROR'
-            ])
-    
-    output.seek(0)
-    csv_content = output.getvalue()
-    print(f"[CSV EXPORT] Generated CSV content length: {len(csv_content)}")
-    
-    response = make_response(csv_content)
-    response.headers['Content-Type'] = 'text/csv'
-    
-    # Generate filename
-    filename_parts = ['transactions_export']
-    if client_ids and len(client_ids) == 1:
-        client = Client.query.get(client_ids[0])
-        if client:
-            filename_parts.append(client.company_name.replace(' ', '_'))
-    elif len(client_ids) > 1:
-        filename_parts.append(f'{len(client_ids)}_clients')
-    
-    if start_date:
-        filename_parts.append(f'from_{start_date}')
-    if end_date:
-        filename_parts.append(f'to_{end_date}')
-    
-    filename_parts.append(datetime.now().strftime('%Y%m%d_%H%M%S'))
-    filename = '_'.join(filename_parts) + '.csv'
-    
-    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
-    print(f"[CSV EXPORT] Returning response with filename: {filename}")
-    return response
+    try:
+        import csv
+        import io
+        from flask import make_response
+        from datetime import datetime
+        
+        print(f"[CSV EXPORT] Starting CSV export for {len(transactions)} transactions")
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow([
+            'Transaction ID', 'Client', 'Service', 'Status', 'Amount', 
+            'Mobile Number', 'Created At', 'Updated At', 'Client App ID'
+        ])
+        
+        # Write data
+        for transaction in transactions:
+            try:
+                writer.writerow([
+                    transaction.unique_id or '',
+                    transaction.client.company_name if transaction.client else 'Unknown Client',
+                    transaction.service.display_name if transaction.service else 'Unknown Service',
+                    transaction.status or '',
+                    transaction.amount or '',
+                    transaction.mobile_number or '',
+                    transaction.created_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.created_at else '',
+                    transaction.updated_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.updated_at else '',
+                    transaction.client.app_id if transaction.client else ''
+                ])
+            except Exception as e:
+                print(f"[CSV EXPORT] Error writing transaction {transaction.id}: {str(e)}")
+                # Write a row with error info
+                writer.writerow([
+                    transaction.unique_id or 'ERROR',
+                    'ERROR',
+                    'ERROR', 
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR'
+                ])
+        
+        output.seek(0)
+        csv_content = output.getvalue()
+        print(f"[CSV EXPORT] Generated CSV content length: {len(csv_content)}")
+        
+        response = make_response(csv_content)
+        response.headers['Content-Type'] = 'text/csv'
+        
+        # Generate filename
+        filename_parts = ['transactions_export']
+        if client_ids and len(client_ids) == 1:
+            client = Client.query.get(client_ids[0])
+            if client:
+                filename_parts.append(client.company_name.replace(' ', '_'))
+        elif len(client_ids) > 1:
+            filename_parts.append(f'{len(client_ids)}_clients')
+        
+        if start_date:
+            filename_parts.append(f'from_{start_date}')
+        if end_date:
+            filename_parts.append(f'to_{end_date}')
+        
+        filename_parts.append(datetime.now().strftime('%Y%m%d_%H%M%S'))
+        filename = '_'.join(filename_parts) + '.csv'
+        
+        response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+        print(f"[CSV EXPORT] Returning response with filename: {filename}")
+        return response
+        
+    except Exception as e:
+        import traceback
+        print(f"[CSV EXPORT] ERROR: {str(e)}")
+        print(f"[CSV EXPORT] Traceback: {traceback.format_exc()}")
+        from flask import make_response
+        return make_response(f"Error generating CSV: {str(e)}", 500)
 
 
 @admin.route("/bulk-export/clients")
