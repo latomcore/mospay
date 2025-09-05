@@ -1657,45 +1657,57 @@ def bulk_export_transactions():
         print(f"[BULK EXPORT] Parameters: client_ids={client_ids}, service_ids={service_ids}, statuses={statuses}, start_date={start_date}, end_date={end_date}")
         
         # Build query
+        print("[BULK EXPORT] Building query...")
         query = Transaction.query
         
         # Apply client filter
         if client_ids:
+            print(f"[BULK EXPORT] Applying client filter: {client_ids}")
             query = query.filter(Transaction.client_id.in_(client_ids))
         
         # Apply service filter
         if service_ids:
+            print(f"[BULK EXPORT] Applying service filter: {service_ids}")
             query = query.filter(Transaction.service_id.in_(service_ids))
         
         # Apply status filter
         if statuses:
+            print(f"[BULK EXPORT] Applying status filter: {statuses}")
             query = query.filter(Transaction.status.in_(statuses))
         
         # Apply date filters
         if start_date:
             try:
                 start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
+                print(f"[BULK EXPORT] Applying start date filter: {start_datetime}")
                 query = query.filter(Transaction.created_at >= start_datetime)
-            except ValueError:
+            except ValueError as e:
+                print(f"[BULK EXPORT] Error parsing start date: {e}")
                 pass
         
         if end_date:
             try:
                 end_datetime = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+                print(f"[BULK EXPORT] Applying end date filter: {end_datetime}")
                 query = query.filter(Transaction.created_at < end_datetime)
-            except ValueError:
+            except ValueError as e:
+                print(f"[BULK EXPORT] Error parsing end date: {e}")
                 pass
         
         # Order by creation date
+        print("[BULK EXPORT] Applying order by...")
         query = query.order_by(Transaction.created_at.desc())
         
         # Get all transactions
+        print("[BULK EXPORT] Executing query...")
         transactions = query.all()
         print(f"[BULK EXPORT] Found {len(transactions)} transactions to export")
         
         if export_format == "csv":
+            print("[BULK EXPORT] Calling CSV export function...")
             return _export_transactions_csv(transactions, client_ids, start_date, end_date)
         else:
+            print(f"[BULK EXPORT] Unsupported export format: {export_format}")
             flash("Unsupported export format", "error")
             return redirect(url_for("admin.bulk_export"))
             
@@ -1752,7 +1764,10 @@ def _export_transactions_csv(transactions, client_ids, start_date, end_date):
             ])
     
     output.seek(0)
-    response = make_response(output.getvalue())
+    csv_content = output.getvalue()
+    print(f"[CSV EXPORT] Generated CSV content length: {len(csv_content)}")
+    
+    response = make_response(csv_content)
     response.headers['Content-Type'] = 'text/csv'
     
     # Generate filename
@@ -1773,6 +1788,7 @@ def _export_transactions_csv(transactions, client_ids, start_date, end_date):
     filename = '_'.join(filename_parts) + '.csv'
     
     response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+    print(f"[CSV EXPORT] Returning response with filename: {filename}")
     return response
 
 
