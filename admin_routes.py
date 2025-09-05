@@ -2245,6 +2245,7 @@ def monitoring_dashboard():
         return render_template("admin/monitoring_dashboard.html",
                              clients=client_performance,
                              recent_alerts=recent_alerts,
+                             current_user=current_user,
                              
                              # System metrics
                              total_transactions=total_transactions,
