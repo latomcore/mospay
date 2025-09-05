@@ -1659,6 +1659,15 @@ def bulk_export_transactions():
         end_date = request.form.get("end_date")
         export_format = request.form.get("export_format", "csv")
         
+        # Convert string IDs to integers
+        try:
+            client_ids = [int(cid) for cid in client_ids if cid]
+            service_ids = [int(sid) for sid in service_ids if sid]
+        except ValueError as e:
+            print(f"[BULK EXPORT] Error converting IDs to integers: {e}")
+            flash("Invalid client or service ID format", "error")
+            return redirect(url_for("admin.bulk_export"))
+        
         print(f"[BULK EXPORT] Parameters: client_ids={client_ids}, service_ids={service_ids}, statuses={statuses}, start_date={start_date}, end_date={end_date}")
         
         # Build query
