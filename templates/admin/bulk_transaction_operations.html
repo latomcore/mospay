@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Bulk Transaction Operations - MosPay</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
+    
+    <style>
+        .transaction-card {
+            transition: transform 0.2s;
+        }
+        .transaction-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .select-all-container {
+            background-color: #f8f9fc;
+            border-radius: 0.35rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .bulk-actions-container {
+            background-color: #e8f5e8;
+            border-radius: 0.35rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #28a745;
+        }
+        
+        .filter-container {
+            background-color: #fff3cd;
+            border-radius: 0.35rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('admin.dashboard') }}">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">MosPay</div>
+            </a>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider my-0">
+
+            <!-- Nav Item - Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Management
+            </div>
+
+            <!-- Nav Item - Clients -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.clients') }}">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Clients</span></a>
+            </li>
+
+            <!-- Nav Item - Services -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.services') }}">
+                    <i class="fas fa-fw fa-cogs"></i>
+                    <span>Services</span></a>
+            </li>
+
+            <!-- Nav Item - Transactions -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.transactions') }}">
+                    <i class="fas fa-fw fa-exchange-alt"></i>
+                    <span>Transactions</span></a>
+            </li>
+
+            <!-- Nav Item - Users -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.users') }}">
+                    <i class="fas fa-fw fa-user"></i>
+                    <span>Users</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Monitoring
+            </div>
+
+            <!-- Nav Item - Alerts -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.alerts') }}">
+                    <i class="fas fa-fw fa-bell"></i>
+                    <span>Alerts</span></a>
+            </li>
+
+            <!-- Nav Item - Alert Rules -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.alert_rules') }}">
+                    <i class="fas fa-fw fa-cog"></i>
+                    <span>Alert Rules</span></a>
+            </li>
+
+            <!-- Nav Item - Monitoring Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.monitoring_dashboard') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Monitoring Dashboard</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Security
+            </div>
+
+            <!-- Nav Item - Security Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.security_dashboard') }}">
+                    <i class="fas fa-fw fa-shield-alt"></i>
+                    <span>Security Dashboard</span></a>
+            </li>
+
+            <!-- Nav Item - Security Events -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.security_events') }}">
+                    <i class="fas fa-fw fa-exclamation-triangle"></i>
+                    <span>Security Events</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Bulk Operations
+            </div>
+
+            <!-- Nav Item - Bulk Operations -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.bulk_operations') }}">
+                    <i class="fas fa-fw fa-tasks"></i>
+                    <span>Bulk Operations</span></a>
+            </li>
+
+            <!-- Nav Item - Bulk Transaction Operations -->
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('admin.bulk_transaction_operations') }}">
+                    <i class="fas fa-fw fa-exchange-alt"></i>
+                    <span>Transaction Operations</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Reports & Export
+            </div>
+
+            <!-- Nav Item - Bulk Export -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.bulk_export') }}">
+                    <i class="fas fa-fw fa-download"></i>
+                    <span>Bulk Export</span></a>
+            </li>
+
+            <!-- Nav Item - Performance Summary -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.performance_summary_report') }}">
+                    <i class="fas fa-fw fa-chart-line"></i>
+                    <span>Performance Summary</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Sidebar Toggler (Sidebar) -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+
+        </ul>
+        <!-- End of Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+                    <!-- Sidebar Toggle (Topbar) -->
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <!-- Topbar Navbar -->
+                    <ul class="navbar-nav ml-auto">
+
+                        <!-- Nav Item - User Information -->
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ current_user.username if current_user.is_authenticated else session.get('username', 'User') }}</span>
+                                <img class="img-profile rounded-circle" src="https://source.unsplash.com/QAB-WJcbgJk/60x60">
+                            </a>
+                            <!-- Dropdown - User Information -->
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Profile
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+
+                    </ul>
+
+                </nav>
+                <!-- End of Topbar -->
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-exchange-alt"></i> Bulk Transaction Operations
+                        </h1>
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('admin.bulk_operations') }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Bulk Operations
+                            </a>
+                            <button class="btn btn-sm btn-outline-primary" onclick="refreshPage()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="filter-container">
+                        <h6 class="text-warning mb-3">
+                            <i class="fas fa-filter"></i> Filter Transactions
+                        </h6>
+                        <form method="GET" action="{{ url_for('admin.bulk_transaction_operations') }}">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="client_id">Client:</label>
+                                        <select class="form-control" id="client_id" name="client_id">
+                                            <option value="">All Clients</option>
+                                            {% for client in clients %}
+                                            <option value="{{ client.id }}" {% if request.args.get('client_id')|int == client.id %}selected{% endif %}>
+                                                {{ client.company_name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="status">Status:</label>
+                                        <select class="form-control" id="status" name="status">
+                                            <option value="">All Statuses</option>
+                                            {% for status in statuses %}
+                                            <option value="{{ status }}" {% if request.args.get('status') == status %}selected{% endif %}>
+                                                {{ status.title() }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>&nbsp;</label>
+                                        <div class="d-flex">
+                                            <button type="submit" class="btn btn-warning mr-2">
+                                                <i class="fas fa-search"></i> Filter
+                                            </button>
+                                            <a href="{{ url_for('admin.bulk_transaction_operations') }}" class="btn btn-outline-secondary">
+                                                <i class="fas fa-times"></i> Clear
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Select All Controls -->
+                    <div class="select-all-container">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="selectAllTransactions" onchange="toggleAllTransactions()">
+                                    <label class="form-check-label" for="selectAllTransactions">
+                                        <strong>Select All Transactions</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <span class="badge badge-info" id="selectedCount">0 transactions selected</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Actions -->
+                    <div class="bulk-actions-container" id="bulkActions" style="display: none;">
+                        <h6 class="text-success mb-3">
+                            <i class="fas fa-tasks"></i> Bulk Actions for Selected Transactions
+                        </h6>
+                        <form method="POST" action="{{ url_for('admin.bulk_update_transactions') }}" id="bulkTransactionForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="new_status">New Status:</label>
+                                        <select class="form-control" id="new_status" name="new_status" required>
+                                            <option value="">Choose new status...</option>
+                                            {% for status in statuses %}
+                                            <option value="{{ status }}">{{ status.title() }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="notes">Notes (Optional):</label>
+                                        <input type="text" class="form-control" id="notes" name="notes" placeholder="Reason for status change">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>&nbsp;</label>
+                                        <button type="submit" class="btn btn-success btn-block" onclick="return confirmBulkAction()">
+                                            <i class="fas fa-play"></i> Update
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Transactions List -->
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-list"></i> Transactions List 
+                                <span class="badge badge-primary">{{ transactions.total }}</span>
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if transactions.items %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                        <thead>
+                                            <tr>
+                                                <th width="5%">
+                                                    <input type="checkbox" id="selectAllHeader" onchange="toggleAllTransactions()">
+                                                </th>
+                                                <th>Transaction ID</th>
+                                                <th>Client</th>
+                                                <th>Service</th>
+                                                <th>Amount</th>
+                                                <th>Status</th>
+                                                <th>Created</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for transaction in transactions.items %}
+                                            <tr class="transaction-card">
+                                                <td>
+                                                    <input type="checkbox" class="transaction-checkbox" name="transaction_ids" value="{{ transaction.id }}" onchange="updateSelectedCount()">
+                                                </td>
+                                                <td>
+                                                    <div class="font-weight-bold">{{ transaction.unique_id }}</div>
+                                                    <small class="text-muted">ID: {{ transaction.id }}</small>
+                                                </td>
+                                                <td>
+                                                    {% if transaction.client %}
+                                                        <div class="font-weight-bold">{{ transaction.client.company_name }}</div>
+                                                        <small class="text-muted">{{ transaction.client.app_id }}</small>
+                                                    {% else %}
+                                                        <span class="text-muted">N/A</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if transaction.service %}
+                                                        <span class="badge badge-info">{{ transaction.service.display_name }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">N/A</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if transaction.amount %}
+                                                        <span class="font-weight-bold">${{ "%.2f"|format(transaction.amount) }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">N/A</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if transaction.status == 'completed' %}
+                                                        <span class="badge badge-success">{{ transaction.status.title() }}</span>
+                                                    {% elif transaction.status == 'pending' %}
+                                                        <span class="badge badge-warning">{{ transaction.status.title() }}</span>
+                                                    {% elif transaction.status == 'failed' %}
+                                                        <span class="badge badge-danger">{{ transaction.status.title() }}</span>
+                                                    {% else %}
+                                                        <span class="badge badge-secondary">{{ transaction.status.title() }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">
+                                                        {{ transaction.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ url_for('admin.transactions') }}?search={{ transaction.unique_id }}" class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Pagination -->
+                                {% if transactions.pages > 1 %}
+                                <nav aria-label="Transactions pagination">
+                                    <ul class="pagination justify-content-center">
+                                        {% if transactions.has_prev %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.bulk_transaction_operations', page=transactions.prev_num, client_id=request.args.get('client_id'), status=request.args.get('status')) }}">
+                                                Previous
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        
+                                        {% for page_num in transactions.iter_pages() %}
+                                            {% if page_num %}
+                                                {% if page_num != transactions.page %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('admin.bulk_transaction_operations', page=page_num, client_id=request.args.get('client_id'), status=request.args.get('status')) }}">
+                                                        {{ page_num }}
+                                                    </a>
+                                                </li>
+                                                {% else %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_num }}</span>
+                                                </li>
+                                                {% endif %}
+                                            {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if transactions.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.bulk_transaction_operations', page=transactions.next_num, client_id=request.args.get('client_id'), status=request.args.get('status')) }}">
+                                                Next
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                                {% endif %}
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No Transactions Found</h5>
+                                    <p class="text-muted">No transactions match your current filters.</p>
+                                    <a href="{{ url_for('admin.bulk_transaction_operations') }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-list"></i> View All Transactions
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <!-- End of Page Content -->
+
+            </div>
+            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; MosPay 2025</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal-->
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-primary" href="{{ url_for('auth.logout') }}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+
+    <script>
+        function refreshPage() {
+            location.reload();
+        }
+
+        function toggleAllTransactions() {
+            const selectAll = document.getElementById('selectAllTransactions');
+            const selectAllHeader = document.getElementById('selectAllHeader');
+            const checkboxes = document.querySelectorAll('.transaction-checkbox');
+            
+            const isChecked = selectAll.checked || selectAllHeader.checked;
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            
+            // Sync the two select all checkboxes
+            selectAll.checked = isChecked;
+            selectAllHeader.checked = isChecked;
+            
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.transaction-checkbox:checked');
+            const count = checkboxes.length;
+            const selectedCount = document.getElementById('selectedCount');
+            const bulkActions = document.getElementById('bulkActions');
+            
+            selectedCount.textContent = `${count} transaction${count !== 1 ? 's' : ''} selected`;
+            
+            if (count > 0) {
+                bulkActions.style.display = 'block';
+            } else {
+                bulkActions.style.display = 'none';
+            }
+        }
+
+        function confirmBulkAction() {
+            const newStatus = document.getElementById('new_status').value;
+            const checkboxes = document.querySelectorAll('.transaction-checkbox:checked');
+            
+            if (!newStatus) {
+                alert('Please select a new status');
+                return false;
+            }
+            
+            if (checkboxes.length === 0) {
+                alert('Please select at least one transaction');
+                return false;
+            }
+            
+            return confirm(`Are you sure you want to update ${checkboxes.length} transaction(s) to ${newStatus}?`);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelectedCount();
+        });
+    </script>
+
+</body>
+
+</html>

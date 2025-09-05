@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Bulk Client Operations - MosPay</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
+    
+    <style>
+        .client-card {
+            transition: transform 0.2s;
+        }
+        .client-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .select-all-container {
+            background-color: #f8f9fc;
+            border-radius: 0.35rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .bulk-actions-container {
+            background-color: #e3f2fd;
+            border-radius: 0.35rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('admin.dashboard') }}">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">MosPay</div>
+            </a>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider my-0">
+
+            <!-- Nav Item - Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Management
+            </div>
+
+            <!-- Nav Item - Clients -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.clients') }}">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Clients</span></a>
+            </li>
+
+            <!-- Nav Item - Services -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.services') }}">
+                    <i class="fas fa-fw fa-cogs"></i>
+                    <span>Services</span></a>
+            </li>
+
+            <!-- Nav Item - Transactions -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.transactions') }}">
+                    <i class="fas fa-fw fa-exchange-alt"></i>
+                    <span>Transactions</span></a>
+            </li>
+
+            <!-- Nav Item - Users -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.users') }}">
+                    <i class="fas fa-fw fa-user"></i>
+                    <span>Users</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Monitoring
+            </div>
+
+            <!-- Nav Item - Alerts -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.alerts') }}">
+                    <i class="fas fa-fw fa-bell"></i>
+                    <span>Alerts</span></a>
+            </li>
+
+            <!-- Nav Item - Alert Rules -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.alert_rules') }}">
+                    <i class="fas fa-fw fa-cog"></i>
+                    <span>Alert Rules</span></a>
+            </li>
+
+            <!-- Nav Item - Monitoring Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.monitoring_dashboard') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Monitoring Dashboard</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Security
+            </div>
+
+            <!-- Nav Item - Security Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.security_dashboard') }}">
+                    <i class="fas fa-fw fa-shield-alt"></i>
+                    <span>Security Dashboard</span></a>
+            </li>
+
+            <!-- Nav Item - Security Events -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.security_events') }}">
+                    <i class="fas fa-fw fa-exclamation-triangle"></i>
+                    <span>Security Events</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Bulk Operations
+            </div>
+
+            <!-- Nav Item - Bulk Operations -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.bulk_operations') }}">
+                    <i class="fas fa-fw fa-tasks"></i>
+                    <span>Bulk Operations</span></a>
+            </li>
+
+            <!-- Nav Item - Bulk Client Operations -->
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('admin.bulk_client_operations') }}">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Client Operations</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Reports & Export
+            </div>
+
+            <!-- Nav Item - Bulk Export -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.bulk_export') }}">
+                    <i class="fas fa-fw fa-download"></i>
+                    <span>Bulk Export</span></a>
+            </li>
+
+            <!-- Nav Item - Performance Summary -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.performance_summary_report') }}">
+                    <i class="fas fa-fw fa-chart-line"></i>
+                    <span>Performance Summary</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Sidebar Toggler (Sidebar) -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+
+        </ul>
+        <!-- End of Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+                    <!-- Sidebar Toggle (Topbar) -->
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <!-- Topbar Navbar -->
+                    <ul class="navbar-nav ml-auto">
+
+                        <!-- Nav Item - User Information -->
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ current_user.username if current_user.is_authenticated else session.get('username', 'User') }}</span>
+                                <img class="img-profile rounded-circle" src="https://source.unsplash.com/QAB-WJcbgJk/60x60">
+                            </a>
+                            <!-- Dropdown - User Information -->
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Profile
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+
+                    </ul>
+
+                </nav>
+                <!-- End of Topbar -->
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-users"></i> Bulk Client Operations
+                        </h1>
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('admin.bulk_operations') }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Bulk Operations
+                            </a>
+                            <button class="btn btn-sm btn-outline-primary" onclick="refreshPage()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Select All Controls -->
+                    <div class="select-all-container">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="selectAllClients" onchange="toggleAllClients()">
+                                    <label class="form-check-label" for="selectAllClients">
+                                        <strong>Select All Clients</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <span class="badge badge-info" id="selectedCount">0 clients selected</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Actions -->
+                    <div class="bulk-actions-container" id="bulkActions" style="display: none;">
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-tasks"></i> Bulk Actions for Selected Clients
+                        </h6>
+                        <form method="POST" action="{{ url_for('admin.bulk_update_clients') }}" id="bulkClientForm">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label for="operation">Select Operation:</label>
+                                        <select class="form-control" id="operation" name="operation" required>
+                                            <option value="">Choose an operation...</option>
+                                            <option value="activate">Activate Selected Clients</option>
+                                            <option value="deactivate">Deactivate Selected Clients</option>
+                                            <option value="delete">Delete Selected Clients</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>&nbsp;</label>
+                                        <button type="submit" class="btn btn-primary btn-block" onclick="return confirmBulkAction()">
+                                            <i class="fas fa-play"></i> Execute Operation
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Service Assignment Section -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-cogs"></i> Bulk Service Assignment
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin.bulk_assign_services') }}" id="serviceAssignmentForm">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="serviceOperation">Operation:</label>
+                                            <select class="form-control" id="serviceOperation" name="operation" required>
+                                                <option value="">Choose operation...</option>
+                                                <option value="assign">Assign Services</option>
+                                                <option value="remove">Remove Services</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="serviceSelection">Select Services:</label>
+                                            <select class="form-control" id="serviceSelection" name="service_ids" multiple required>
+                                                {% for service in services %}
+                                                <option value="{{ service.id }}">{{ service.display_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple services</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>&nbsp;</label>
+                                            <button type="submit" class="btn btn-success btn-block" onclick="return confirmServiceAction()">
+                                                <i class="fas fa-cogs"></i> Execute Service Operation
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Clients List -->
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-list"></i> Clients List 
+                                <span class="badge badge-primary">{{ clients|length }}</span>
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if clients %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                        <thead>
+                                            <tr>
+                                                <th width="5%">
+                                                    <input type="checkbox" id="selectAllHeader" onchange="toggleAllClients()">
+                                                </th>
+                                                <th>Company</th>
+                                                <th>Contact</th>
+                                                <th>Email</th>
+                                                <th>Status</th>
+                                                <th>Services</th>
+                                                <th>Created</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for client in clients %}
+                                            <tr class="client-card">
+                                                <td>
+                                                    <input type="checkbox" class="client-checkbox" name="client_ids" value="{{ client.id }}" onchange="updateSelectedCount()">
+                                                </td>
+                                                <td>
+                                                    <div class="font-weight-bold">{{ client.company_name }}</div>
+                                                    <small class="text-muted">{{ client.app_id }}</small>
+                                                </td>
+                                                <td>{{ client.contact_person }}</td>
+                                                <td>{{ client.email }}</td>
+                                                <td>
+                                                    {% if client.is_active %}
+                                                        <span class="badge badge-success">Active</span>
+                                                    {% else %}
+                                                        <span class="badge badge-danger">Inactive</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% set client_services = client.services %}
+                                                    {% if client_services %}
+                                                        {% for service in client_services[:2] %}
+                                                            <span class="badge badge-info">{{ service.display_name }}</span>
+                                                        {% endfor %}
+                                                        {% if client_services|length > 2 %}
+                                                            <span class="badge badge-secondary">+{{ client_services|length - 2 }} more</span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="text-muted">No services</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">
+                                                        {{ client.created_at.strftime('%Y-%m-%d') }}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ url_for('admin.view_client', client_id=client.id) }}" class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No Clients Found</h5>
+                                    <p class="text-muted">There are no clients to display.</p>
+                                    <a href="{{ url_for('admin.clients') }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-plus"></i> Add New Client
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <!-- End of Page Content -->
+
+            </div>
+            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; MosPay 2025</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal-->
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-primary" href="{{ url_for('auth.logout') }}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+
+    <script>
+        function refreshPage() {
+            location.reload();
+        }
+
+        function toggleAllClients() {
+            const selectAll = document.getElementById('selectAllClients');
+            const selectAllHeader = document.getElementById('selectAllHeader');
+            const checkboxes = document.querySelectorAll('.client-checkbox');
+            
+            const isChecked = selectAll.checked || selectAllHeader.checked;
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            
+            // Sync the two select all checkboxes
+            selectAll.checked = isChecked;
+            selectAllHeader.checked = isChecked;
+            
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.client-checkbox:checked');
+            const count = checkboxes.length;
+            const selectedCount = document.getElementById('selectedCount');
+            const bulkActions = document.getElementById('bulkActions');
+            
+            selectedCount.textContent = `${count} client${count !== 1 ? 's' : ''} selected`;
+            
+            if (count > 0) {
+                bulkActions.style.display = 'block';
+            } else {
+                bulkActions.style.display = 'none';
+            }
+        }
+
+        function confirmBulkAction() {
+            const operation = document.getElementById('operation').value;
+            const checkboxes = document.querySelectorAll('.client-checkbox:checked');
+            
+            if (!operation) {
+                alert('Please select an operation');
+                return false;
+            }
+            
+            if (checkboxes.length === 0) {
+                alert('Please select at least one client');
+                return false;
+            }
+            
+            const actionText = operation.charAt(0).toUpperCase() + operation.slice(1);
+            return confirm(`Are you sure you want to ${actionText.toLowerCase()} ${checkboxes.length} client(s)?`);
+        }
+
+        function confirmServiceAction() {
+            const operation = document.getElementById('serviceOperation').value;
+            const services = document.getElementById('serviceSelection').selectedOptions;
+            const checkboxes = document.querySelectorAll('.client-checkbox:checked');
+            
+            if (!operation) {
+                alert('Please select an operation');
+                return false;
+            }
+            
+            if (services.length === 0) {
+                alert('Please select at least one service');
+                return false;
+            }
+            
+            if (checkboxes.length === 0) {
+                alert('Please select at least one client');
+                return false;
+            }
+            
+            const actionText = operation.charAt(0).toUpperCase() + operation.slice(1);
+            return confirm(`Are you sure you want to ${actionText.toLowerCase()} ${services.length} service(s) for ${checkboxes.length} client(s)?`);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelectedCount();
+        });
+    </script>
+
+</body>
+
+</html>
