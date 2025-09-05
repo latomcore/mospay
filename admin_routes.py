@@ -1643,6 +1643,8 @@ def bulk_export_transactions():
         
         # Debug logging
         print(f"[BULK EXPORT] Form data received: {request.form}")
+        print(f"[BULK EXPORT] Request method: {request.method}")
+        print(f"[BULK EXPORT] Request URL: {request.url}")
         
         # Get export parameters
         client_ids = request.form.getlist("client_ids")
@@ -1785,6 +1787,8 @@ def bulk_export_clients():
         from flask import make_response
         
         print("[CLIENT EXPORT] Starting client export")
+        print(f"[CLIENT EXPORT] Request method: {request.method}")
+        print(f"[CLIENT EXPORT] Request URL: {request.url}")
         
         # Get all active clients
         clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
