@@ -21,6 +21,10 @@ from models import (
     ApiLog,
     Alert,
     AlertRule,
+    SecurityEvent,
+    IPBlacklist,
+    RateLimit,
+    FraudDetection,
 )
 from auth import admin_required, super_admin_required
 from auth import generate_app_id, generate_api_credentials
@@ -2272,6 +2276,215 @@ def monitoring_dashboard():
         print(f"[MONITORING] Traceback: {traceback.format_exc()}")
         flash(f"Error loading monitoring dashboard: {str(e)}", "error")
         return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/security/dashboard")
+@admin_required
+def security_dashboard():
+    """Security monitoring dashboard"""
+    try:
+        from datetime import datetime, timedelta
+        from security_monitor import security_monitor
+        
+        print("[SECURITY] Loading security monitoring dashboard...")
+        
+        # Get security summary for last 24 hours
+        security_summary = security_monitor.get_security_summary(hours=24)
+        
+        # Get recent security events
+        recent_events = SecurityEvent.query.order_by(
+            SecurityEvent.created_at.desc()
+        ).limit(20).all()
+        
+        # Get blocked IPs
+        blocked_ips = IPBlacklist.query.filter_by(is_active=True).order_by(
+            IPBlacklist.blocked_at.desc()
+        ).limit(10).all()
+        
+        # Get rate limited identifiers
+        rate_limited = RateLimit.query.filter_by(is_blocked=True).order_by(
+            RateLimit.updated_at.desc()
+        ).limit(10).all()
+        
+        # Get fraud alerts
+        fraud_alerts = FraudDetection.query.filter(
+            FraudDetection.status == 'pending'
+        ).order_by(FraudDetection.created_at.desc()).limit(10).all()
+        
+        # Get security events for charts (last 7 days)
+        chart_data = []
+        for i in range(7):
+            date = datetime.now().date() - timedelta(days=i)
+            events_count = SecurityEvent.query.filter(
+                db.func.date(SecurityEvent.created_at) == date
+            ).count()
+            chart_data.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'count': events_count
+            })
+        chart_data.reverse()
+        
+        # Get events by type for pie chart
+        event_types = db.session.query(
+            SecurityEvent.event_type,
+            db.func.count(SecurityEvent.id).label('count')
+        ).filter(
+            SecurityEvent.created_at >= datetime.utcnow() - timedelta(days=7)
+        ).group_by(SecurityEvent.event_type).all()
+        
+        return render_template("admin/security_dashboard.html",
+                             security_summary=security_summary,
+                             recent_events=recent_events,
+                             blocked_ips=blocked_ips,
+                             rate_limited=rate_limited,
+                             fraud_alerts=fraud_alerts,
+                             chart_data=chart_data,
+                             event_types=event_types,
+                             current_user=current_user)
+        
+    except Exception as e:
+        import traceback
+        print(f"[SECURITY] ERROR: {str(e)}")
+        print(f"[SECURITY] Traceback: {traceback.format_exc()}")
+        flash(f"Error loading security dashboard: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/security/events")
+@admin_required
+def security_events():
+    """Security events management page"""
+    try:
+        from datetime import datetime, timedelta
+        
+        # Get filter parameters
+        event_type = request.args.get('event_type', '')
+        severity = request.args.get('severity', '')
+        status = request.args.get('status', '')
+        page = request.args.get('page', 1, type=int)
+        per_page = 20
+        
+        # Build query
+        query = SecurityEvent.query
+        
+        if event_type:
+            query = query.filter(SecurityEvent.event_type == event_type)
+        if severity:
+            query = query.filter(SecurityEvent.severity == severity)
+        if status:
+            query = query.filter(SecurityEvent.status == status)
+        
+        # Order by creation date
+        query = query.order_by(SecurityEvent.created_at.desc())
+        
+        # Paginate
+        events = query.paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        # Get unique values for filters
+        event_types = db.session.query(SecurityEvent.event_type).distinct().all()
+        severities = db.session.query(SecurityEvent.severity).distinct().all()
+        statuses = db.session.query(SecurityEvent.status).distinct().all()
+        
+        return render_template("admin/security_events.html",
+                             events=events,
+                             event_types=[t[0] for t in event_types],
+                             severities=[s[0] for s in severities],
+                             statuses=[st[0] for st in statuses],
+                             current_user=current_user)
+        
+    except Exception as e:
+        import traceback
+        print(f"[SECURITY] ERROR: {str(e)}")
+        print(f"[SECURITY] Traceback: {traceback.format_exc()}")
+        flash(f"Error loading security events: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/security/block-ip", methods=["POST"])
+@admin_required
+def block_ip():
+    """Block an IP address"""
+    try:
+        from security_monitor import security_monitor
+        
+        ip_address = request.form.get('ip_address')
+        reason = request.form.get('reason')
+        expires_hours = request.form.get('expires_hours', type=int)
+        
+        if not ip_address or not reason:
+            flash("IP address and reason are required", "error")
+            return redirect(url_for("admin.security_dashboard"))
+        
+        # Calculate expiration time
+        expires_at = None
+        if expires_hours and expires_hours > 0:
+            expires_at = datetime.utcnow() + timedelta(hours=expires_hours)
+        
+        # Block the IP
+        success, message = security_monitor.block_ip(
+            ip_address=ip_address,
+            reason=reason,
+            blocked_by=current_user.id,
+            expires_at=expires_at
+        )
+        
+        if success:
+            flash(f"IP {ip_address} blocked successfully", "success")
+        else:
+            flash(f"Failed to block IP: {message}", "error")
+        
+        return redirect(url_for("admin.security_dashboard"))
+        
+    except Exception as e:
+        import traceback
+        print(f"[SECURITY] ERROR: {str(e)}")
+        print(f"[SECURITY] Traceback: {traceback.format_exc()}")
+        flash(f"Error blocking IP: {str(e)}", "error")
+        return redirect(url_for("admin.security_dashboard"))
+
+
+@admin.route("/security/unblock-ip/<int:block_id>", methods=["POST"])
+@admin_required
+def unblock_ip(block_id):
+    """Unblock an IP address"""
+    try:
+        block = IPBlacklist.query.get_or_404(block_id)
+        block.is_active = False
+        db.session.commit()
+        
+        flash(f"IP {block.ip_address} unblocked successfully", "success")
+        return redirect(url_for("admin.security_dashboard"))
+        
+    except Exception as e:
+        import traceback
+        print(f"[SECURITY] ERROR: {str(e)}")
+        print(f"[SECURITY] Traceback: {traceback.format_exc()}")
+        flash(f"Error unblocking IP: {str(e)}", "error")
+        return redirect(url_for("admin.security_dashboard"))
+
+
+@admin.route("/security/resolve-event/<int:event_id>", methods=["POST"])
+@admin_required
+def resolve_security_event(event_id):
+    """Resolve a security event"""
+    try:
+        event = SecurityEvent.query.get_or_404(event_id)
+        event.status = 'resolved'
+        event.resolved_at = datetime.utcnow()
+        event.resolved_by = current_user.id
+        db.session.commit()
+        
+        flash("Security event resolved successfully", "success")
+        return redirect(url_for("admin.security_events"))
+        
+    except Exception as e:
+        import traceback
+        print(f"[SECURITY] ERROR: {str(e)}")
+        print(f"[SECURITY] Traceback: {traceback.format_exc()}")
+        flash(f"Error resolving event: {str(e)}", "error")
+        return redirect(url_for("admin.security_events"))
 
 
 @admin.route("/reports/performance-summary")

@@ -176,6 +176,91 @@ class Alert(db.Model):
     resolved_user = db.relationship("User", foreign_keys=[resolved_by], backref="resolved_alerts")
 
 
+# Security Monitoring Models
+class SecurityEvent(db.Model):
+    """Track security-related events and incidents"""
+    __tablename__ = "security_events"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    event_type = db.Column(db.String(50), nullable=False)  # login_failed, suspicious_transaction, ip_blocked, etc.
+    severity = db.Column(db.String(20), default="medium")  # low, medium, high, critical
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    ip_address = db.Column(db.String(45), nullable=True)  # IPv4 or IPv6
+    user_agent = db.Column(db.Text, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    client_id = db.Column(db.Integer, db.ForeignKey("clients.id"), nullable=True)
+    transaction_id = db.Column(db.Integer, db.ForeignKey("transactions.id"), nullable=True)
+    event_data = db.Column(db.JSON)  # Additional event-specific data
+    status = db.Column(db.String(20), default="active")  # active, investigated, resolved, false_positive
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    resolved_at = db.Column(db.DateTime, nullable=True)
+    resolved_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    
+    # Relationships
+    user = db.relationship("User", foreign_keys=[user_id], backref="security_events")
+    client = db.relationship("Client", backref="security_events")
+    transaction = db.relationship("Transaction", backref="security_events")
+    resolver = db.relationship("User", foreign_keys=[resolved_by], backref="resolved_security_events")
+
+
+class IPBlacklist(db.Model):
+    """Track blocked IP addresses and their reasons"""
+    __tablename__ = "ip_blacklist"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(45), nullable=False, unique=True)
+    reason = db.Column(db.String(200), nullable=False)
+    blocked_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    blocked_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=True)  # None for permanent blocks
+    is_active = db.Column(db.Boolean, default=True)
+    event_count = db.Column(db.Integer, default=1)  # Number of events that led to blocking
+    
+    # Relationships
+    blocker = db.relationship("User", backref="blocked_ips")
+
+
+class RateLimit(db.Model):
+    """Track API rate limiting and abuse"""
+    __tablename__ = "rate_limits"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    identifier = db.Column(db.String(100), nullable=False)  # IP, user_id, client_id, etc.
+    identifier_type = db.Column(db.String(20), nullable=False)  # ip, user, client, api_key
+    endpoint = db.Column(db.String(200), nullable=True)  # Specific API endpoint
+    request_count = db.Column(db.Integer, default=1)
+    window_start = db.Column(db.DateTime, default=datetime.utcnow)
+    window_duration = db.Column(db.Integer, default=3600)  # Seconds
+    limit_threshold = db.Column(db.Integer, default=100)  # Max requests per window
+    is_blocked = db.Column(db.Boolean, default=False)
+    blocked_until = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class FraudDetection(db.Model):
+    """Track fraud detection patterns and rules"""
+    __tablename__ = "fraud_detection"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    transaction_id = db.Column(db.Integer, db.ForeignKey("transactions.id"), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey("clients.id"), nullable=False)
+    risk_score = db.Column(db.Float, nullable=False)  # 0.0 to 1.0
+    risk_factors = db.Column(db.JSON)  # List of risk factors detected
+    fraud_rules_triggered = db.Column(db.JSON)  # Rules that were triggered
+    status = db.Column(db.String(20), default="pending")  # pending, approved, rejected, manual_review
+    reviewed_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    review_notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    transaction = db.relationship("Transaction", backref="fraud_analysis")
+    client = db.relationship("Client", backref="fraud_analysis")
+    reviewer = db.relationship("User", backref="fraud_reviews")
+
+
 class AlertRule(db.Model):
     __tablename__ = "alert_rules"
 
