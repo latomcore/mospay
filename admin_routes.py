@@ -2876,16 +2876,26 @@ def bulk_import_clients():
                     errors.append(f"Row {row_num}: Client with email {row['email']} already exists")
                     continue
                 
+                # Generate app_id and API credentials
+                from auth import generate_app_id, generate_api_credentials
+                app_id = generate_app_id()
+                api_username, api_password = generate_api_credentials()
+                
                 # Create new client
                 client = Client(
+                    app_id=app_id,
                     company_name=row['company_name'],
                     contact_person=row['contact_person'],
                     email=row['email'],
                     phone=row.get('phone', ''),
                     address=row.get('address', ''),
+                    api_username=api_username,
                     callback_url=row.get('callback_url', ''),
                     is_active=row.get('is_active', 'true').lower() == 'true'
                 )
+                
+                # Set the hashed password
+                client.set_api_password(api_password)
                 
                 db.session.add(client)
                 imported_count += 1
