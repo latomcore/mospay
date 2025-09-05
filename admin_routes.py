@@ -1832,7 +1832,9 @@ def bulk_export_clients():
         print(f"[CLIENT EXPORT] Request URL: {request.url}")
         
         # Get all active clients
+        print("[CLIENT EXPORT] Querying active clients...")
         clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        print(f"[CLIENT EXPORT] Found {len(clients)} active clients")
         
         # Calculate performance metrics for each client
         today = datetime.now().date()
@@ -1852,65 +1854,100 @@ def bulk_export_clients():
         ])
         
         # Write data
-        for client in clients:
-            # Get transaction counts
-            total_transactions = Transaction.query.filter_by(client_id=client.id).count()
-            last_30d_transactions = Transaction.query.filter(
-                Transaction.client_id == client.id,
-                db.func.date(Transaction.created_at) >= last_30_days
-            ).count()
-            last_7d_transactions = Transaction.query.filter(
-                Transaction.client_id == client.id,
-                db.func.date(Transaction.created_at) >= last_7d_transactions
-            ).count()
+        print("[CLIENT EXPORT] Processing clients...")
+        for i, client in enumerate(clients):
+            print(f"[CLIENT EXPORT] Processing client {i+1}/{len(clients)}: {client.company_name}")
             
-            # Get success rate (last 30 days)
-            successful_transactions = Transaction.query.filter(
-                Transaction.client_id == client.id,
-                db.func.date(Transaction.created_at) >= last_30_days,
-                Transaction.status == 'completed'
-            ).count()
-            
-            success_rate = (successful_transactions / last_30d_transactions * 100) if last_30d_transactions > 0 else 0
-            
-            # Get revenue (last 30 days)
-            revenue_30d = db.session.query(db.func.sum(Transaction.amount)).filter(
-                Transaction.client_id == client.id,
-                db.func.date(Transaction.created_at) >= last_30_days,
-                Transaction.status == 'completed'
-            ).scalar() or 0
-            
-            # Get last transaction date
-            last_transaction = Transaction.query.filter_by(client_id=client.id).order_by(
-                Transaction.created_at.desc()
-            ).first()
-            
-            writer.writerow([
-                client.id,
-                client.company_name,
-                client.contact_person,
-                client.email,
-                client.phone,
-                client.app_id,
-                client.api_username,
-                'Yes' if client.is_active else 'No',
-                client.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                total_transactions,
-                last_30d_transactions,
-                last_7d_transactions,
-                f"{success_rate:.1f}%",
-                f"${revenue_30d:.2f}",
-                last_transaction.created_at.strftime('%Y-%m-%d %H:%M:%S') if last_transaction else '',
-                client.callback_url or ''
-            ])
+            try:
+                # Get transaction counts
+                total_transactions = Transaction.query.filter_by(client_id=client.id).count()
+                last_30d_transactions = Transaction.query.filter(
+                    Transaction.client_id == client.id,
+                    db.func.date(Transaction.created_at) >= last_30_days
+                ).count()
+                last_7d_transactions = Transaction.query.filter(
+                    Transaction.client_id == client.id,
+                    db.func.date(Transaction.created_at) >= last_7_days
+                ).count()
+                
+                # Get success rate (last 30 days)
+                successful_transactions = Transaction.query.filter(
+                    Transaction.client_id == client.id,
+                    db.func.date(Transaction.created_at) >= last_30_days,
+                    Transaction.status == 'completed'
+                ).count()
+                
+                success_rate = (successful_transactions / last_30d_transactions * 100) if last_30d_transactions > 0 else 0
+                
+                # Get revenue (last 30 days)
+                revenue_30d = db.session.query(db.func.sum(Transaction.amount)).filter(
+                    Transaction.client_id == client.id,
+                    db.func.date(Transaction.created_at) >= last_30_days,
+                    Transaction.status == 'completed'
+                ).scalar() or 0
+                
+                # Get last transaction date
+                last_transaction = Transaction.query.filter_by(client_id=client.id).order_by(
+                    Transaction.created_at.desc()
+                ).first()
+                
+                writer.writerow([
+                    client.id,
+                    client.company_name,
+                    client.contact_person,
+                    client.email,
+                    client.phone,
+                    client.app_id,
+                    client.api_username,
+                    'Yes' if client.is_active else 'No',
+                    client.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    total_transactions,
+                    last_30d_transactions,
+                    last_7d_transactions,
+                    f"{success_rate:.1f}%",
+                    f"${revenue_30d:.2f}",
+                    last_transaction.created_at.strftime('%Y-%m-%d %H:%M:%S') if last_transaction else '',
+                    client.callback_url or ''
+                ])
+                
+            except Exception as e:
+                print(f"[CLIENT EXPORT] Error processing client {client.company_name}: {str(e)}")
+                # Write a row with error info
+                writer.writerow([
+                    client.id,
+                    client.company_name,
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR',
+                    'ERROR'
+                ])
         
         output.seek(0)
-        response = make_response(output.getvalue())
+        csv_content = output.getvalue()
+        print(f"[CLIENT EXPORT] Generated CSV content length: {len(csv_content)}")
+        
+        response = make_response(csv_content)
         response.headers['Content-Type'] = 'text/csv'
-        response.headers['Content-Disposition'] = f'attachment; filename=clients_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        filename = f'clients_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+        
+        print(f"[CLIENT EXPORT] Returning response with filename: {filename}")
         return response
         
     except Exception as e:
+        import traceback
+        print(f"[CLIENT EXPORT] ERROR: {str(e)}")
+        print(f"[CLIENT EXPORT] Traceback: {traceback.format_exc()}")
         flash(f"Error exporting clients: {str(e)}", "error")
         return redirect(url_for("admin.bulk_export"))
 
