@@ -2504,6 +2504,414 @@ def resolve_security_event(event_id):
         return redirect(url_for("admin.security_events"))
 
 
+@admin.route("/bulk-operations")
+@admin_required
+def bulk_operations():
+    """Bulk operations management dashboard"""
+    try:
+        # Get counts for overview
+        clients_count = Client.query.count()
+        services_count = Service.query.count()
+        users_count = User.query.count()
+        transactions_count = Transaction.query.count()
+        
+        # Get recent bulk operations (we'll track these in a new model)
+        return render_template("admin/bulk_operations.html",
+                             clients_count=clients_count,
+                             services_count=services_count,
+                             users_count=users_count,
+                             transactions_count=transactions_count,
+                             current_user=current_user)
+        
+    except Exception as e:
+        import traceback
+        print(f"[BULK] ERROR: {str(e)}")
+        print(f"[BULK] Traceback: {traceback.format_exc()}")
+        flash(f"Error loading bulk operations: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/bulk-operations/clients")
+@admin_required
+def bulk_client_operations():
+    """Bulk client operations page"""
+    try:
+        # Get all clients with their service counts
+        clients = Client.query.all()
+        services = Service.query.all()
+        
+        return render_template("admin/bulk_client_operations.html",
+                             clients=clients,
+                             services=services,
+                             current_user=current_user)
+        
+    except Exception as e:
+        import traceback
+        print(f"[BULK] ERROR: {str(e)}")
+        print(f"[BULK] Traceback: {traceback.format_exc()}")
+        flash(f"Error loading bulk client operations: {str(e)}", "error")
+        return redirect(url_for("admin.bulk_operations"))
+
+
+@admin.route("/bulk-operations/clients/update", methods=["POST"])
+@admin_required
+def bulk_update_clients():
+    """Bulk update client properties"""
+    try:
+        client_ids = request.form.getlist('client_ids')
+        operation = request.form.get('operation')
+        
+        if not client_ids:
+            flash("No clients selected", "error")
+            return redirect(url_for("admin.bulk_client_operations"))
+        
+        updated_count = 0
+        
+        if operation == 'activate':
+            for client_id in client_ids:
+                client = Client.query.get(client_id)
+                if client:
+                    client.is_active = True
+                    updated_count += 1
+                    
+        elif operation == 'deactivate':
+            for client_id in client_ids:
+                client = Client.query.get(client_id)
+                if client:
+                    client.is_active = False
+                    updated_count += 1
+                    
+        elif operation == 'delete':
+            for client_id in client_ids:
+                client = Client.query.get(client_id)
+                if client:
+                    # Check if client has transactions
+                    transaction_count = Transaction.query.filter_by(client_id=client_id).count()
+                    if transaction_count > 0:
+                        flash(f"Cannot delete client {client.company_name} - has {transaction_count} transactions", "error")
+                        continue
+                    db.session.delete(client)
+                    updated_count += 1
+        
+        db.session.commit()
+        flash(f"Successfully updated {updated_count} clients", "success")
+        
+    except Exception as e:
+        import traceback
+        print(f"[BULK] ERROR: {str(e)}")
+        print(f"[BULK] Traceback: {traceback.format_exc()}")
+        flash(f"Error updating clients: {str(e)}", "error")
+        db.session.rollback()
+    
+    return redirect(url_for("admin.bulk_client_operations"))
+
+
+@admin.route("/bulk-operations/services/assign", methods=["POST"])
+@admin_required
+def bulk_assign_services():
+    """Bulk assign services to clients"""
+    try:
+        client_ids = request.form.getlist('client_ids')
+        service_ids = request.form.getlist('service_ids')
+        operation = request.form.get('operation')  # 'assign' or 'remove'
+        
+        if not client_ids or not service_ids:
+            flash("Please select both clients and services", "error")
+            return redirect(url_for("admin.bulk_client_operations"))
+        
+        updated_count = 0
+        
+        for client_id in client_ids:
+            client = Client.query.get(client_id)
+            if not client:
+                continue
+                
+            for service_id in service_ids:
+                service = Service.query.get(service_id)
+                if not service:
+                    continue
+                
+                if operation == 'assign':
+                    # Check if already assigned
+                    existing = ClientService.query.filter_by(
+                        client_id=client_id, 
+                        service_id=service_id
+                    ).first()
+                    if not existing:
+                        client_service = ClientService(
+                            client_id=client_id,
+                            service_id=service_id,
+                            is_active=True
+                        )
+                        db.session.add(client_service)
+                        updated_count += 1
+                        
+                elif operation == 'remove':
+                    existing = ClientService.query.filter_by(
+                        client_id=client_id, 
+                        service_id=service_id
+                    ).first()
+                    if existing:
+                        db.session.delete(existing)
+                        updated_count += 1
+        
+        db.session.commit()
+        flash(f"Successfully {operation}ed {updated_count} service assignments", "success")
+        
+    except Exception as e:
+        import traceback
+        print(f"[BULK] ERROR: {str(e)}")
+        print(f"[BULK] Traceback: {traceback.format_exc()}")
+        flash(f"Error updating service assignments: {str(e)}", "error")
+        db.session.rollback()
+    
+    return redirect(url_for("admin.bulk_client_operations"))
+
+
+@admin.route("/bulk-operations/transactions")
+@admin_required
+def bulk_transaction_operations():
+    """Bulk transaction operations page"""
+    try:
+        # Get filter parameters
+        client_id = request.args.get('client_id', type=int)
+        status = request.args.get('status', '')
+        page = request.args.get('page', 1, type=int)
+        per_page = 50
+        
+        # Build query
+        query = Transaction.query
+        
+        if client_id:
+            query = query.filter(Transaction.client_id == client_id)
+        if status:
+            query = query.filter(Transaction.status == status)
+        
+        # Order by creation date
+        query = query.order_by(Transaction.created_at.desc())
+        
+        # Paginate
+        transactions = query.paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        # Get clients and statuses for filters
+        clients = Client.query.all()
+        statuses = ['pending', 'completed', 'failed', 'cancelled']
+        
+        return render_template("admin/bulk_transaction_operations.html",
+                             transactions=transactions,
+                             clients=clients,
+                             statuses=statuses,
+                             current_user=current_user)
+        
+    except Exception as e:
+        import traceback
+        print(f"[BULK] ERROR: {str(e)}")
+        print(f"[BULK] Traceback: {traceback.format_exc()}")
+        flash(f"Error loading bulk transaction operations: {str(e)}", "error")
+        return redirect(url_for("admin.bulk_operations"))
+
+
+@admin.route("/bulk-operations/transactions/update", methods=["POST"])
+@admin_required
+def bulk_update_transactions():
+    """Bulk update transaction status"""
+    try:
+        transaction_ids = request.form.getlist('transaction_ids')
+        new_status = request.form.get('new_status')
+        notes = request.form.get('notes', '')
+        
+        if not transaction_ids or not new_status:
+            flash("Please select transactions and provide new status", "error")
+            return redirect(url_for("admin.bulk_transaction_operations"))
+        
+        updated_count = 0
+        
+        for transaction_id in transaction_ids:
+            transaction = Transaction.query.get(transaction_id)
+            if transaction:
+                transaction.status = new_status
+                if notes:
+                    # Add notes to transaction (we might need to add a notes field)
+                    pass
+                updated_count += 1
+        
+        db.session.commit()
+        flash(f"Successfully updated {updated_count} transactions to {new_status}", "success")
+        
+    except Exception as e:
+        import traceback
+        print(f"[BULK] ERROR: {str(e)}")
+        print(f"[BULK] Traceback: {traceback.format_exc()}")
+        flash(f"Error updating transactions: {str(e)}", "error")
+        db.session.rollback()
+    
+    return redirect(url_for("admin.bulk_transaction_operations"))
+
+
+@admin.route("/bulk-operations/users")
+@admin_required
+def bulk_user_operations():
+    """Bulk user operations page"""
+    try:
+        users = User.query.all()
+        
+        return render_template("admin/bulk_user_operations.html",
+                             users=users,
+                             current_user=current_user)
+        
+    except Exception as e:
+        import traceback
+        print(f"[BULK] ERROR: {str(e)}")
+        print(f"[BULK] Traceback: {traceback.format_exc()}")
+        flash(f"Error loading bulk user operations: {str(e)}", "error")
+        return redirect(url_for("admin.bulk_operations"))
+
+
+@admin.route("/bulk-operations/users/update", methods=["POST"])
+@admin_required
+def bulk_update_users():
+    """Bulk update user properties"""
+    try:
+        user_ids = request.form.getlist('user_ids')
+        operation = request.form.get('operation')
+        
+        if not user_ids:
+            flash("No users selected", "error")
+            return redirect(url_for("admin.bulk_user_operations"))
+        
+        updated_count = 0
+        
+        if operation == 'activate':
+            for user_id in user_ids:
+                user = User.query.get(user_id)
+                if user and user.id != current_user.id:  # Don't deactivate self
+                    user.is_active = True
+                    updated_count += 1
+                    
+        elif operation == 'deactivate':
+            for user_id in user_ids:
+                user = User.query.get(user_id)
+                if user and user.id != current_user.id:  # Don't deactivate self
+                    user.is_active = False
+                    updated_count += 1
+                    
+        elif operation == 'delete':
+            for user_id in user_ids:
+                user = User.query.get(user_id)
+                if user and user.id != current_user.id:  # Don't delete self
+                    db.session.delete(user)
+                    updated_count += 1
+        
+        db.session.commit()
+        flash(f"Successfully updated {updated_count} users", "success")
+        
+    except Exception as e:
+        import traceback
+        print(f"[BULK] ERROR: {str(e)}")
+        print(f"[BULK] Traceback: {traceback.format_exc()}")
+        flash(f"Error updating users: {str(e)}", "error")
+        db.session.rollback()
+    
+    return redirect(url_for("admin.bulk_user_operations"))
+
+
+@admin.route("/bulk-operations/import")
+@admin_required
+def bulk_import():
+    """Bulk import page"""
+    try:
+        return render_template("admin/bulk_import.html",
+                             current_user=current_user)
+        
+    except Exception as e:
+        import traceback
+        print(f"[BULK] ERROR: {str(e)}")
+        print(f"[BULK] Traceback: {traceback.format_exc()}")
+        flash(f"Error loading bulk import: {str(e)}", "error")
+        return redirect(url_for("admin.bulk_operations"))
+
+
+@admin.route("/bulk-operations/import/clients", methods=["POST"])
+@admin_required
+def bulk_import_clients():
+    """Bulk import clients from CSV"""
+    try:
+        if 'file' not in request.files:
+            flash("No file selected", "error")
+            return redirect(url_for("admin.bulk_import"))
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash("No file selected", "error")
+            return redirect(url_for("admin.bulk_import"))
+        
+        if not file.filename.endswith('.csv'):
+            flash("Please upload a CSV file", "error")
+            return redirect(url_for("admin.bulk_import"))
+        
+        # Read CSV file
+        import csv
+        import io
+        
+        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+        csv_input = csv.DictReader(stream)
+        
+        imported_count = 0
+        errors = []
+        
+        for row_num, row in enumerate(csv_input, 1):
+            try:
+                # Validate required fields
+                required_fields = ['company_name', 'contact_person', 'email']
+                for field in required_fields:
+                    if not row.get(field):
+                        errors.append(f"Row {row_num}: Missing required field '{field}'")
+                        continue
+                
+                # Check if client already exists
+                existing_client = Client.query.filter_by(email=row['email']).first()
+                if existing_client:
+                    errors.append(f"Row {row_num}: Client with email {row['email']} already exists")
+                    continue
+                
+                # Create new client
+                client = Client(
+                    company_name=row['company_name'],
+                    contact_person=row['contact_person'],
+                    email=row['email'],
+                    phone=row.get('phone', ''),
+                    address=row.get('address', ''),
+                    callback_url=row.get('callback_url', ''),
+                    is_active=row.get('is_active', 'true').lower() == 'true'
+                )
+                
+                db.session.add(client)
+                imported_count += 1
+                
+            except Exception as e:
+                errors.append(f"Row {row_num}: {str(e)}")
+        
+        db.session.commit()
+        
+        if errors:
+            flash(f"Imported {imported_count} clients with {len(errors)} errors", "warning")
+            for error in errors[:5]:  # Show first 5 errors
+                flash(error, "error")
+        else:
+            flash(f"Successfully imported {imported_count} clients", "success")
+        
+    except Exception as e:
+        import traceback
+        print(f"[BULK] ERROR: {str(e)}")
+        print(f"[BULK] Traceback: {traceback.format_exc()}")
+        flash(f"Error importing clients: {str(e)}", "error")
+        db.session.rollback()
+    
+    return redirect(url_for("admin.bulk_import"))
+
+
 @admin.route("/reports/performance-summary")
 @admin_required
 def performance_summary_report():
