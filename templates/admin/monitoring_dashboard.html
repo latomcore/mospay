@@ -1,0 +1,355 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Centralized Monitoring Dashboard - MosPay{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-tachometer-alt"></i> Centralized Monitoring Dashboard
+        </h1>
+        <div class="btn-group" role="group">
+            <button class="btn btn-sm btn-outline-primary" onclick="refreshDashboard()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- System Health Overview -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Today's Transactions</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ today_transactions }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exchange-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Success Rate (Today)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ "%.1f"|format(success_rate_today) }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Today's Revenue</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(today_revenue) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Active Alerts</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_alerts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Transaction Trends Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Transaction Trends (Last 7 Days)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="transactionTrendsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Usage Chart -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Service Usage (Last 7 Days)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="serviceUsageChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Status Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-users"></i> Client Status Overview
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="clientStatusTable">
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>App ID</th>
+                                    <th>Status</th>
+                                    <th>Last 7d Transactions</th>
+                                    <th>Success Rate</th>
+                                    <th>Revenue (7d)</th>
+                                    <th>Last Activity</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for client in clients %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ client.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <code>{{ client.app_id }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{{ client.status_color }}">
+                                            {{ client.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="font-weight-bold">{{ client.last_7d_transactions }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-{{ 'success' if client.success_rate >= 80 else 'warning' if client.success_rate >= 60 else 'danger' }}" 
+                                                 role="progressbar" style="width: {{ client.success_rate }}%">
+                                                {{ "%.1f"|format(client.success_rate) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-success font-weight-bold">${{ "%.2f"|format(client.revenue_7d) }}</span>
+                                    </td>
+                                    <td>
+                                        {% if client.last_transaction %}
+                                            <small class="text-muted">
+                                                {{ client.last_transaction.strftime('%Y-%m-%d %H:%M') }}
+                                                <br>
+                                                <span class="text-{{ client.status_color }}">
+                                                    {{ "%.1f"|format(client.hours_since_last) }}h ago
+                                                </span>
+                                            </small>
+                                        {% else %}
+                                            <span class="text-muted">No activity</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('admin.view_client', client_id=client.id) }}" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('admin.transactions', client_id=client.id) }}" 
+                                               class="btn btn-outline-info btn-sm">
+                                                <i class="fas fa-list"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Management -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-exclamation-triangle"></i> Recent Alerts
+                    </h6>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="{{ url_for('admin.alerts') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-list"></i> View All
+                        </a>
+                        <a href="{{ url_for('admin.alert_rules') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-cog"></i> Manage Rules
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_alerts %}
+                        <div class="list-group">
+                            {% for alert in recent_alerts %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <span class="badge badge-{{ 'danger' if alert.severity == 'critical' else 'warning' if alert.severity == 'warning' else 'info' }}">
+                                            {{ alert.severity|title }}
+                                        </span>
+                                        {{ alert.title }}
+                                    </h6>
+                                    <p class="mb-1">{{ alert.message }}</p>
+                                    <small class="text-muted">
+                                        {{ alert.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                        {% if alert.client %}
+                                            • Client: {{ alert.client.company_name }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <form method="POST" action="{{ url_for('admin.acknowledge_alert', alert_id=alert.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-success btn-sm">
+                                            <i class="fas fa-check"></i> Acknowledge
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('admin.resolve_alert', alert_id=alert.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-flag-checkered"></i> Resolve
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h5 class="text-muted">No Active Alerts</h5>
+                            <p class="text-muted">All systems are running smoothly!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Transaction Trends Chart
+const transactionTrendsCtx = document.getElementById('transactionTrendsChart').getContext('2d');
+const transactionTrendsChart = new Chart(transactionTrendsCtx, {
+    type: 'line',
+    data: {
+        labels: {{ transaction_trends|map(attribute='date')|list|tojson }},
+        datasets: [{
+            label: 'Transactions',
+            data: {{ transaction_trends|map(attribute='count')|list|tojson }},
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Service Usage Chart
+const serviceUsageCtx = document.getElementById('serviceUsageChart').getContext('2d');
+const serviceUsageChart = new Chart(serviceUsageCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ service_stats|map(attribute='display_name')|list|tojson }},
+        datasets: [{
+            data: {{ service_stats|map(attribute='count')|list|tojson }},
+            backgroundColor: [
+                '#FF6384',
+                '#36A2EB',
+                '#FFCE56',
+                '#4BC0C0',
+                '#9966FF',
+                '#FF9F40'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Auto-refresh function
+function refreshDashboard() {
+    location.reload();
+}
+
+// Auto-refresh every 5 minutes
+setInterval(refreshDashboard, 300000);
+
+// Initialize DataTable for client status
+$(document).ready(function() {
+    $('#clientStatusTable').DataTable({
+        "pageLength": 10,
+        "order": [[ 6, "desc" ]], // Sort by last activity
+        "columnDefs": [
+            { "orderable": false, "targets": 7 } // Disable sorting on Actions column
+        ]
+    });
+});
+</script>
+
+{% endblock %}

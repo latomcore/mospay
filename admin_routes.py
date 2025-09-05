@@ -2097,6 +2097,181 @@ def bulk_export_clients_pdf():
         return redirect(url_for("admin.bulk_export"))
 
 
+@admin.route("/monitoring/dashboard")
+@admin_required
+def monitoring_dashboard():
+    """Centralized monitoring dashboard for all clients"""
+    try:
+        from datetime import datetime, timedelta
+        
+        print("[MONITORING] Loading centralized monitoring dashboard...")
+        
+        # Get all clients with their current status
+        clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        print(f"[MONITORING] Found {len(clients)} active clients")
+        
+        # Calculate real-time metrics
+        today = datetime.now().date()
+        last_24h = datetime.now() - timedelta(hours=24)
+        last_7d = today - timedelta(days=7)
+        last_30d = today - timedelta(days=30)
+        
+        # System-wide statistics
+        total_transactions = Transaction.query.count()
+        today_transactions = Transaction.query.filter(
+            db.func.date(Transaction.created_at) == today
+        ).count()
+        last_24h_transactions = Transaction.query.filter(
+            Transaction.created_at >= last_24h
+        ).count()
+        
+        # Success rates
+        completed_today = Transaction.query.filter(
+            db.func.date(Transaction.created_at) == today,
+            Transaction.status == 'completed'
+        ).count()
+        success_rate_today = (completed_today / today_transactions * 100) if today_transactions > 0 else 0
+        
+        # Revenue metrics
+        today_revenue = db.session.query(db.func.sum(Transaction.amount)).filter(
+            db.func.date(Transaction.created_at) == today,
+            Transaction.status == 'completed'
+        ).scalar() or 0
+        
+        last_30d_revenue = db.session.query(db.func.sum(Transaction.amount)).filter(
+            db.func.date(Transaction.created_at) >= last_30d,
+            Transaction.status == 'completed'
+        ).scalar() or 0
+        
+        # Client performance data for charts
+        client_performance = []
+        for client in clients:
+            # Get client metrics
+            client_transactions = Transaction.query.filter_by(client_id=client.id)
+            total_client_txns = client_transactions.count()
+            
+            # Last 7 days performance
+            last_7d_txns = client_transactions.filter(
+                db.func.date(Transaction.created_at) >= last_7d
+            ).count()
+            
+            # Success rate (last 7 days)
+            successful_7d = client_transactions.filter(
+                db.func.date(Transaction.created_at) >= last_7d,
+                Transaction.status == 'completed'
+            ).count()
+            success_rate_7d = (successful_7d / last_7d_txns * 100) if last_7d_txns > 0 else 0
+            
+            # Revenue (last 7 days)
+            revenue_7d = db.session.query(db.func.sum(Transaction.amount)).filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= last_7d,
+                Transaction.status == 'completed'
+            ).scalar() or 0
+            
+            # Last transaction
+            last_transaction = client_transactions.order_by(
+                Transaction.created_at.desc()
+            ).first()
+            
+            # Determine client status
+            if last_transaction:
+                hours_since_last = (datetime.now() - last_transaction.created_at).total_seconds() / 3600
+                if hours_since_last < 1:
+                    status = "Very Active"
+                    status_color = "success"
+                elif hours_since_last < 24:
+                    status = "Active"
+                    status_color = "info"
+                elif hours_since_last < 168:  # 7 days
+                    status = "Moderate"
+                    status_color = "warning"
+                else:
+                    status = "Inactive"
+                    status_color = "danger"
+            else:
+                status = "No Activity"
+                status_color = "secondary"
+            
+            client_performance.append({
+                'id': client.id,
+                'name': client.company_name,
+                'app_id': client.app_id,
+                'total_transactions': total_client_txns,
+                'last_7d_transactions': last_7d_txns,
+                'success_rate': success_rate_7d,
+                'revenue_7d': revenue_7d,
+                'status': status,
+                'status_color': status_color,
+                'last_transaction': last_transaction.created_at if last_transaction else None,
+                'hours_since_last': hours_since_last if last_transaction else None
+            })
+        
+        # Sort clients by activity (most recent first)
+        client_performance.sort(key=lambda x: x['last_transaction'] or datetime.min, reverse=True)
+        
+        # Get recent alerts
+        recent_alerts = Alert.query.filter_by(status='active').order_by(
+            Alert.created_at.desc()
+        ).limit(10).all()
+        
+        # Get alert statistics
+        total_alerts = Alert.query.count()
+        active_alerts = Alert.query.filter_by(status='active').count()
+        critical_alerts = Alert.query.filter_by(severity='critical', status='active').count()
+        warning_alerts = Alert.query.filter_by(severity='warning', status='active').count()
+        
+        # Transaction trends for charts (last 7 days)
+        transaction_trends = []
+        for i in range(7):
+            date = today - timedelta(days=i)
+            count = Transaction.query.filter(
+                db.func.date(Transaction.created_at) == date
+            ).count()
+            transaction_trends.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'count': count
+            })
+        transaction_trends.reverse()  # Show oldest to newest
+        
+        # Service usage statistics
+        service_stats = db.session.query(
+            Service.display_name,
+            db.func.count(Transaction.id).label('count')
+        ).join(Transaction).filter(
+            db.func.date(Transaction.created_at) >= last_7d
+        ).group_by(Service.id, Service.display_name).all()
+        
+        return render_template("admin/monitoring_dashboard.html",
+                             clients=client_performance,
+                             recent_alerts=recent_alerts,
+                             
+                             # System metrics
+                             total_transactions=total_transactions,
+                             today_transactions=today_transactions,
+                             last_24h_transactions=last_24h_transactions,
+                             success_rate_today=success_rate_today,
+                             today_revenue=today_revenue,
+                             last_30d_revenue=last_30d_revenue,
+                             
+                             # Alert metrics
+                             total_alerts=total_alerts,
+                             active_alerts=active_alerts,
+                             critical_alerts=critical_alerts,
+                             warning_alerts=warning_alerts,
+                             
+                             # Chart data
+                             transaction_trends=transaction_trends,
+                             service_stats=service_stats)
+        
+    except Exception as e:
+        import traceback
+        print(f"[MONITORING] ERROR: {str(e)}")
+        print(f"[MONITORING] Traceback: {traceback.format_exc()}")
+        flash(f"Error loading monitoring dashboard: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
 @admin.route("/reports/performance-summary")
 @admin_required
 def performance_summary_report():
