@@ -1720,6 +1720,9 @@ def bulk_export_transactions():
         if export_format == "csv":
             print("[BULK EXPORT] Calling CSV export function...")
             return _export_transactions_csv(transactions, client_ids, start_date, end_date)
+        elif export_format == "pdf":
+            print("[BULK EXPORT] Calling PDF export function...")
+            return _export_transactions_pdf(transactions, client_ids, start_date, end_date)
         else:
             print(f"[BULK EXPORT] Unsupported export format: {export_format}")
             flash("Unsupported export format", "error")
@@ -1815,6 +1818,46 @@ def _export_transactions_csv(transactions, client_ids, start_date, end_date):
         print(f"[CSV EXPORT] Traceback: {traceback.format_exc()}")
         from flask import make_response
         return make_response(f"Error generating CSV: {str(e)}", 500)
+
+
+def _export_transactions_pdf(transactions, client_ids, start_date, end_date):
+    """Helper function to export transactions as PDF"""
+    try:
+        from pdf_utils import PDFGenerator, create_pdf_response
+        from datetime import datetime
+        
+        print(f"[PDF EXPORT] Starting PDF export for {len(transactions)} transactions")
+        
+        # Generate PDF
+        pdf_generator = PDFGenerator()
+        pdf_buffer = pdf_generator.create_transactions_pdf(transactions, client_ids, start_date, end_date)
+        
+        # Generate filename
+        filename_parts = ['transactions_report']
+        if client_ids and len(client_ids) == 1:
+            client = Client.query.get(client_ids[0])
+            if client:
+                filename_parts.append(client.company_name.replace(' ', '_'))
+        elif len(client_ids) > 1:
+            filename_parts.append(f'{len(client_ids)}_clients')
+        
+        if start_date:
+            filename_parts.append(f'from_{start_date}')
+        if end_date:
+            filename_parts.append(f'to_{end_date}')
+        
+        filename_parts.append(datetime.now().strftime('%Y%m%d_%H%M%S'))
+        filename = '_'.join(filename_parts) + '.pdf'
+        
+        print(f"[PDF EXPORT] Returning PDF response with filename: {filename}")
+        return create_pdf_response(pdf_buffer, filename)
+        
+    except Exception as e:
+        import traceback
+        print(f"[PDF EXPORT] ERROR: {str(e)}")
+        print(f"[PDF EXPORT] Traceback: {traceback.format_exc()}")
+        from flask import make_response
+        return make_response(f"Error generating PDF: {str(e)}", 500)
 
 
 @admin.route("/bulk-export/clients")
@@ -1949,6 +1992,108 @@ def bulk_export_clients():
         print(f"[CLIENT EXPORT] ERROR: {str(e)}")
         print(f"[CLIENT EXPORT] Traceback: {traceback.format_exc()}")
         flash(f"Error exporting clients: {str(e)}", "error")
+        return redirect(url_for("admin.bulk_export"))
+
+
+@admin.route("/bulk-export/clients/pdf")
+@admin_required
+def bulk_export_clients_pdf():
+    """Export client data as PDF with performance metrics"""
+    try:
+        from datetime import datetime, timedelta
+        from pdf_utils import PDFGenerator, create_pdf_response
+        
+        print("[CLIENT PDF EXPORT] Starting client PDF export")
+        
+        # Get all active clients
+        print("[CLIENT PDF EXPORT] Querying active clients...")
+        clients = Client.query.filter_by(is_active=True).order_by(Client.company_name).all()
+        print(f"[CLIENT PDF EXPORT] Found {len(clients)} active clients")
+        
+        # Calculate performance metrics for each client
+        today = datetime.now().date()
+        last_30_days = today - timedelta(days=30)
+        last_7_days = today - timedelta(days=7)
+        
+        clients_data = []
+        print("[CLIENT PDF EXPORT] Processing clients...")
+        
+        for i, client in enumerate(clients):
+            print(f"[CLIENT PDF EXPORT] Processing client {i+1}/{len(clients)}: {client.company_name}")
+            
+            try:
+                # Get transaction counts
+                total_transactions = Transaction.query.filter_by(client_id=client.id).count()
+                last_30d_transactions = Transaction.query.filter(
+                    Transaction.client_id == client.id,
+                    db.func.date(Transaction.created_at) >= last_30_days
+                ).count()
+                last_7d_transactions = Transaction.query.filter(
+                    Transaction.client_id == client.id,
+                    db.func.date(Transaction.created_at) >= last_7_days
+                ).count()
+                
+                # Get success rate (last 30 days)
+                successful_transactions = Transaction.query.filter(
+                    Transaction.client_id == client.id,
+                    db.func.date(Transaction.created_at) >= last_30_days,
+                    Transaction.status == 'completed'
+                ).count()
+                
+                success_rate = (successful_transactions / last_30d_transactions * 100) if last_30d_transactions > 0 else 0
+                
+                # Get revenue (last 30 days)
+                revenue_30d = db.session.query(db.func.sum(Transaction.amount)).filter(
+                    Transaction.client_id == client.id,
+                    db.func.date(Transaction.created_at) >= last_30_days,
+                    Transaction.status == 'completed'
+                ).scalar() or 0
+                
+                clients_data.append({
+                    'company_name': client.company_name,
+                    'contact_person': client.contact_person,
+                    'email': client.email,
+                    'phone': client.phone,
+                    'is_active': client.is_active,
+                    'total_transactions': total_transactions,
+                    'last_30d_transactions': last_30d_transactions,
+                    'last_7d_transactions': last_7d_transactions,
+                    'success_rate': success_rate,
+                    'revenue_30d': revenue_30d
+                })
+                
+            except Exception as e:
+                print(f"[CLIENT PDF EXPORT] Error processing client {client.company_name}: {str(e)}")
+                # Add client with error data
+                clients_data.append({
+                    'company_name': client.company_name,
+                    'contact_person': 'ERROR',
+                    'email': 'ERROR',
+                    'phone': 'ERROR',
+                    'is_active': False,
+                    'total_transactions': 0,
+                    'last_30d_transactions': 0,
+                    'last_7d_transactions': 0,
+                    'success_rate': 0,
+                    'revenue_30d': 0
+                })
+        
+        # Generate PDF
+        print("[CLIENT PDF EXPORT] Generating PDF...")
+        pdf_generator = PDFGenerator()
+        pdf_buffer = pdf_generator.create_clients_pdf(clients_data)
+        
+        # Generate filename
+        filename = f'clients_report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+        
+        print(f"[CLIENT PDF EXPORT] Returning PDF response with filename: {filename}")
+        return create_pdf_response(pdf_buffer, filename)
+        
+    except Exception as e:
+        import traceback
+        print(f"[CLIENT PDF EXPORT] ERROR: {str(e)}")
+        print(f"[CLIENT PDF EXPORT] Traceback: {traceback.format_exc()}")
+        flash(f"Error exporting clients PDF: {str(e)}", "error")
         return redirect(url_for("admin.bulk_export"))
 
 

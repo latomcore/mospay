@@ -332,12 +332,22 @@
                                             <label for="export_format">Export Format</label>
                                             <select class="form-control" id="export_format" name="export_format">
                                                 <option value="csv">CSV (Excel Compatible)</option>
+                                                <option value="pdf">PDF Report</option>
                                             </select>
                                         </div>
                                         
-                                        <button type="submit" class="btn btn-success btn-block" onclick="console.log('Transaction export form submitted')">
-                                            <i class="fas fa-download"></i> Export Transactions
-                                        </button>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <button type="submit" class="btn btn-success btn-block" onclick="console.log('Transaction export form submitted')">
+                                                    <i class="fas fa-download"></i> Export CSV
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <button type="submit" class="btn btn-danger btn-block" onclick="console.log('Transaction PDF export form submitted'); document.getElementById('export_format').value='pdf';">
+                                                    <i class="fas fa-file-pdf"></i> Export PDF
+                                                </button>
+                                            </div>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
@@ -369,9 +379,18 @@
                                         </ul>
                                     </div>
                                     
-                                    <a href="{{ url_for('admin.bulk_export_clients') }}" class="btn btn-info btn-block" onclick="console.log('Client export link clicked')">
-                                        <i class="fas fa-download"></i> Export All Clients
-                                    </a>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <a href="{{ url_for('admin.bulk_export_clients') }}" class="btn btn-info btn-block" onclick="console.log('Client CSV export link clicked')">
+                                                <i class="fas fa-download"></i> Export CSV
+                                            </a>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <a href="{{ url_for('admin.bulk_export_clients_pdf') }}" class="btn btn-danger btn-block" onclick="console.log('Client PDF export link clicked')">
+                                                <i class="fas fa-file-pdf"></i> Export PDF
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -393,13 +412,24 @@
                                                 <i class="fas fa-calendar-day fa-2x text-primary mb-2"></i>
                                                 <h6>Today's Transactions</h6>
                                                 <p class="small text-muted">Export all transactions from today</p>
-                                                <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
-                                                    <input type="hidden" name="start_date" value="" id="today_start">
-                                                    <input type="hidden" name="end_date" value="" id="today_end">
-                                                    <button type="submit" class="btn btn-outline-primary btn-sm">
-                                                        <i class="fas fa-download"></i> Export
-                                                    </button>
-                                                </form>
+                                                <div class="btn-group" role="group">
+                                                    <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
+                                                        <input type="hidden" name="start_date" value="" id="today_start">
+                                                        <input type="hidden" name="end_date" value="" id="today_end">
+                                                        <input type="hidden" name="export_format" value="csv">
+                                                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                                                            <i class="fas fa-download"></i> CSV
+                                                        </button>
+                                                    </form>
+                                                    <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
+                                                        <input type="hidden" name="start_date" value="" id="today_start_pdf">
+                                                        <input type="hidden" name="end_date" value="" id="today_end_pdf">
+                                                        <input type="hidden" name="export_format" value="pdf">
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                            <i class="fas fa-file-pdf"></i> PDF
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
@@ -407,13 +437,24 @@
                                                 <i class="fas fa-calendar-week fa-2x text-success mb-2"></i>
                                                 <h6>Last 7 Days</h6>
                                                 <p class="small text-muted">Export transactions from the past week</p>
-                                                <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
-                                                    <input type="hidden" name="start_date" value="" id="week_start">
-                                                    <input type="hidden" name="end_date" value="" id="week_end">
-                                                    <button type="submit" class="btn btn-outline-success btn-sm">
-                                                        <i class="fas fa-download"></i> Export
-                                                    </button>
-                                                </form>
+                                                <div class="btn-group" role="group">
+                                                    <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
+                                                        <input type="hidden" name="start_date" value="" id="week_start">
+                                                        <input type="hidden" name="end_date" value="" id="week_end">
+                                                        <input type="hidden" name="export_format" value="csv">
+                                                        <button type="submit" class="btn btn-outline-success btn-sm">
+                                                            <i class="fas fa-download"></i> CSV
+                                                        </button>
+                                                    </form>
+                                                    <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
+                                                        <input type="hidden" name="start_date" value="" id="week_start_pdf">
+                                                        <input type="hidden" name="end_date" value="" id="week_end_pdf">
+                                                        <input type="hidden" name="export_format" value="pdf">
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                            <i class="fas fa-file-pdf"></i> PDF
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
@@ -421,13 +462,24 @@
                                                 <i class="fas fa-calendar-alt fa-2x text-info mb-2"></i>
                                                 <h6>Last 30 Days</h6>
                                                 <p class="small text-muted">Export transactions from the past month</p>
-                                                <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
-                                                    <input type="hidden" name="start_date" value="" id="month_start">
-                                                    <input type="hidden" name="end_date" value="" id="month_end">
-                                                    <button type="submit" class="btn btn-outline-info btn-sm">
-                                                        <i class="fas fa-download"></i> Export
-                                                    </button>
-                                                </form>
+                                                <div class="btn-group" role="group">
+                                                    <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
+                                                        <input type="hidden" name="start_date" value="" id="month_start">
+                                                        <input type="hidden" name="end_date" value="" id="month_end">
+                                                        <input type="hidden" name="export_format" value="csv">
+                                                        <button type="submit" class="btn btn-outline-info btn-sm">
+                                                            <i class="fas fa-download"></i> CSV
+                                                        </button>
+                                                    </form>
+                                                    <form method="POST" action="{{ url_for('admin.bulk_export_transactions') }}" class="d-inline">
+                                                        <input type="hidden" name="start_date" value="" id="month_start_pdf">
+                                                        <input type="hidden" name="end_date" value="" id="month_end_pdf">
+                                                        <input type="hidden" name="export_format" value="pdf">
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                            <i class="fas fa-file-pdf"></i> PDF
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -479,18 +531,30 @@
             const today = new Date().toISOString().split('T')[0];
             const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
             const lastMonth = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-            
-            // Set today's dates
+
+            // Set today's dates (CSV)
             document.getElementById('today_start').value = today;
             document.getElementById('today_end').value = today;
             
-            // Set last 7 days dates
+            // Set today's dates (PDF)
+            document.getElementById('today_start_pdf').value = today;
+            document.getElementById('today_end_pdf').value = today;
+
+            // Set last 7 days dates (CSV)
             document.getElementById('week_start').value = lastWeek;
             document.getElementById('week_end').value = today;
             
-            // Set last 30 days dates
+            // Set last 7 days dates (PDF)
+            document.getElementById('week_start_pdf').value = lastWeek;
+            document.getElementById('week_end_pdf').value = today;
+
+            // Set last 30 days dates (CSV)
             document.getElementById('month_start').value = lastMonth;
             document.getElementById('month_end').value = today;
+            
+            // Set last 30 days dates (PDF)
+            document.getElementById('month_start_pdf').value = lastMonth;
+            document.getElementById('month_end_pdf').value = today;
         });
     </script>
 
