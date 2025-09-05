@@ -2407,6 +2407,7 @@ def security_events():
 def block_ip():
     """Block an IP address"""
     try:
+        from datetime import timedelta
         from security_monitor import security_monitor
         
         ip_address = request.form.get('ip_address')
