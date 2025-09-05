@@ -12,6 +12,7 @@ from models import db, User
 from auth import admin_required
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_bcrypt import check_password_hash
+from flask_login import login_user, logout_user, login_required, current_user
 import datetime
 
 auth_bp = Blueprint("auth", __name__)
@@ -30,7 +31,10 @@ def login():
             # Create JWT token
             token = create_access_token(identity=user.id)
 
-            # Store in session for admin panel
+            # Login user with Flask-Login
+            login_user(user, remember=True)
+
+            # Store in session for admin panel (for backward compatibility)
             session["user_id"] = user.id
             session["username"] = user.username
             session["role"] = user.role
@@ -45,8 +49,10 @@ def login():
 
 
 @auth_bp.route("/logout")
+@login_required
 def logout():
     """User logout"""
+    logout_user()
     session.clear()
     flash("You have been logged out", "info")
     return redirect(url_for("auth.login"))

@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
+from flask_login import LoginManager
 from config import Config
 from models import db, User, Client, Service, ServiceField, ClientService
 from auth import generate_app_id, generate_api_credentials
@@ -35,6 +36,17 @@ def create_app():
     jwt = JWTManager(app)
     bcrypt = Bcrypt(app)
     CORS(app)
+    
+    # Initialize Flask-Login
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message_category = 'info'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
 
     # Configure JWT settings
     app.config["JWT_TOKEN_LOCATION"] = ["headers"]
