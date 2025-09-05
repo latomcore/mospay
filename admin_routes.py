@@ -8,6 +8,7 @@ from flask import (
     url_for,
     flash,
     current_app,
+    session,
 )
 from flask_login import current_user
 from models import (
@@ -2423,11 +2424,18 @@ def block_ip():
         if expires_hours and expires_hours > 0:
             expires_at = datetime.utcnow() + timedelta(hours=expires_hours)
         
+        # Get user ID from either Flask-Login or session
+        user_id = None
+        if hasattr(current_user, 'id') and current_user.id:
+            user_id = current_user.id
+        elif session.get('user_id'):
+            user_id = session.get('user_id')
+        
         # Block the IP
         success, message = security_monitor.block_ip(
             ip_address=ip_address,
             reason=reason,
-            blocked_by=current_user.id,
+            blocked_by=user_id,
             expires_at=expires_at
         )
         
@@ -2474,7 +2482,15 @@ def resolve_security_event(event_id):
         event = SecurityEvent.query.get_or_404(event_id)
         event.status = 'resolved'
         event.resolved_at = datetime.utcnow()
-        event.resolved_by = current_user.id
+        
+        # Get user ID from either Flask-Login or session
+        user_id = None
+        if hasattr(current_user, 'id') and current_user.id:
+            user_id = current_user.id
+        elif session.get('user_id'):
+            user_id = session.get('user_id')
+        
+        event.resolved_by = user_id
         db.session.commit()
         
         flash("Security event resolved successfully", "success")
