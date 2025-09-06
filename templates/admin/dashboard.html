@@ -272,6 +272,28 @@
             </li>
 
             <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Setup & Migration
+            </div>
+
+            <!-- Nav Item - Analytics Setup -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.setup_analytics_tables') }}">
+                    <i class="fas fa-fw fa-chart-line"></i>
+                    <span>Setup Analytics</span></a>
+            </li>
+
+            <!-- Nav Item - Client Portal Setup -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.setup_client_portal') }}">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Setup Client Portal</span></a>
+            </li>
+
+            <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">
 
             <!-- Sidebar Toggler (Sidebar) -->

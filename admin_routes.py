@@ -3341,3 +3341,65 @@ def setup_analytics_tables():
         flash(f"❌ Error creating analytics tables: {str(e)}", "error")
     
     return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/setup/client-portal")
+@admin_required
+def setup_client_portal():
+    """Setup client portal authentication fields - one-time migration route"""
+    try:
+        from sqlalchemy import text
+        
+        print("🔄 Starting client portal migration...")
+        
+        # Check if columns already exist
+        result = db.session.execute(text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'clients' 
+            AND column_name IN ('portal_password_hash', 'last_login', 'login_attempts', 'account_locked', 'locked_until')
+        """))
+        
+        existing_columns = [row[0] for row in result.fetchall()]
+        print(f"📋 Existing columns: {existing_columns}")
+        
+        # Add missing columns
+        columns_to_add = [
+            ("portal_password_hash", "VARCHAR(255)"),
+            ("last_login", "TIMESTAMP"),
+            ("login_attempts", "INTEGER DEFAULT 0"),
+            ("account_locked", "BOOLEAN DEFAULT FALSE"),
+            ("locked_until", "TIMESTAMP")
+        ]
+        
+        added_columns = []
+        for column_name, column_type in columns_to_add:
+            if column_name not in existing_columns:
+                try:
+                    sql = f"ALTER TABLE clients ADD COLUMN {column_name} {column_type}"
+                    print(f"🔧 Adding column: {column_name}")
+                    db.session.execute(text(sql))
+                    db.session.commit()
+                    added_columns.append(column_name)
+                    print(f"✅ Successfully added column: {column_name}")
+                except Exception as e:
+                    print(f"❌ Error adding column {column_name}: {str(e)}")
+                    db.session.rollback()
+                    flash(f"❌ Error adding column {column_name}: {str(e)}", "error")
+                    return redirect(url_for("admin.dashboard"))
+            else:
+                print(f"⏭️  Column {column_name} already exists, skipping...")
+        
+        if added_columns:
+            flash(f"✅ Client portal migration completed! Added columns: {', '.join(added_columns)}", "success")
+        else:
+            flash("ℹ️  Client portal columns already exist. No migration needed.", "info")
+        
+        print("🎉 Client portal migration completed successfully!")
+        
+    except Exception as e:
+        print(f"❌ Migration failed: {str(e)}")
+        flash(f"❌ Client portal migration failed: {str(e)}", "error")
+        db.session.rollback()
+    
+    return redirect(url_for("admin.dashboard"))
