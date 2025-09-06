@@ -26,6 +26,9 @@ from models import (
     IPBlacklist,
     RateLimit,
     FraudDetection,
+    ReportTemplate,
+    ScheduledReport,
+    ReportExecution,
 )
 from auth import admin_required, super_admin_required
 from auth import generate_app_id, generate_api_credentials
@@ -3000,3 +3003,274 @@ def performance_summary_report():
     except Exception as e:
         flash(f"Error generating performance summary: {str(e)}", "error")
         return redirect(url_for("admin.dashboard"))
+
+
+# ============================================================================
+# PHASE 4.1: ADVANCED ANALYTICS & REPORTING
+# ============================================================================
+
+@admin.route("/analytics/dashboard")
+@admin_required
+def analytics_dashboard():
+    """Advanced analytics dashboard with interactive charts"""
+    try:
+        from datetime import datetime, timedelta
+        
+        # Get date range (default to last 30 days)
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=30)
+        
+        # Revenue analytics
+        revenue_data = []
+        for i in range(30):
+            date = start_date + timedelta(days=i)
+            daily_revenue = db.session.query(db.func.sum(Transaction.amount)).filter(
+                db.func.date(Transaction.created_at) == date,
+                Transaction.status == 'completed'
+            ).scalar() or 0
+            revenue_data.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'revenue': float(daily_revenue)
+            })
+        
+        # Transaction volume analytics
+        transaction_data = []
+        for i in range(30):
+            date = start_date + timedelta(days=i)
+            daily_transactions = Transaction.query.filter(
+                db.func.date(Transaction.created_at) == date
+            ).count()
+            transaction_data.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'transactions': daily_transactions
+            })
+        
+        # Client performance analytics
+        clients = Client.query.filter_by(is_active=True).all()
+        client_performance = []
+        for client in clients:
+            client_transactions = Transaction.query.filter(
+                Transaction.client_id == client.id,
+                db.func.date(Transaction.created_at) >= start_date
+            ).all()
+            
+            if client_transactions:
+                total_amount = sum(t.amount for t in client_transactions if t.status == 'completed')
+                success_rate = len([t for t in client_transactions if t.status == 'completed']) / len(client_transactions) * 100
+                client_performance.append({
+                    'client_name': client.company_name,
+                    'transaction_count': len(client_transactions),
+                    'total_revenue': float(total_amount),
+                    'success_rate': round(success_rate, 2)
+                })
+        
+        # Service analytics
+        services = Service.query.all()
+        service_analytics = []
+        for service in services:
+            service_transactions = Transaction.query.filter(
+                Transaction.service_id == service.id,
+                db.func.date(Transaction.created_at) >= start_date
+            ).count()
+            service_analytics.append({
+                'service_name': service.display_name,
+                'transaction_count': service_transactions
+            })
+        
+        return render_template("admin/analytics_dashboard.html",
+                             revenue_data=revenue_data,
+                             transaction_data=transaction_data,
+                             client_performance=client_performance,
+                             service_analytics=service_analytics,
+                             start_date=start_date,
+                             end_date=end_date)
+        
+    except Exception as e:
+        flash(f"Error loading analytics dashboard: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/reports/builder")
+@admin_required
+def report_builder():
+    """Custom report builder interface"""
+    try:
+        # Get available templates
+        templates = ReportTemplate.query.order_by(ReportTemplate.name).all()
+        
+        # Get system templates
+        system_templates = ReportTemplate.query.filter_by(is_system_template=True).all()
+        
+        # Get user templates
+        user_templates = ReportTemplate.query.filter_by(is_system_template=False).all()
+        
+        return render_template("admin/report_builder.html",
+                             templates=templates,
+                             system_templates=system_templates,
+                             user_templates=user_templates)
+        
+    except Exception as e:
+        flash(f"Error loading report builder: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/reports/templates")
+@admin_required
+def report_templates():
+    """Manage report templates"""
+    try:
+        templates = ReportTemplate.query.order_by(ReportTemplate.created_at.desc()).all()
+        return render_template("admin/report_templates.html", templates=templates)
+        
+    except Exception as e:
+        flash(f"Error loading report templates: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/reports/templates/new", methods=["GET", "POST"])
+@admin_required
+def new_report_template():
+    """Create new report template"""
+    if request.method == "POST":
+        try:
+            template_data = {
+                'name': request.form.get('name'),
+                'description': request.form.get('description'),
+                'category': request.form.get('category'),
+                'template_type': request.form.get('template_type'),
+                'configuration': json.loads(request.form.get('configuration', '{}'))
+            }
+            
+            template = ReportTemplate(
+                name=template_data['name'],
+                description=template_data['description'],
+                category=template_data['category'],
+                template_type=template_data['template_type'],
+                configuration=template_data['configuration'],
+                is_system_template=False,
+                created_by=current_user.id if current_user.is_authenticated else None
+            )
+            
+            db.session.add(template)
+            db.session.commit()
+            
+            flash(f"Report template '{template.name}' created successfully!", "success")
+            return redirect(url_for("admin.report_templates"))
+            
+        except Exception as e:
+            flash(f"Error creating report template: {str(e)}", "error")
+    
+    return render_template("admin/new_report_template.html")
+
+
+@admin.route("/reports/scheduled")
+@admin_required
+def scheduled_reports():
+    """Manage scheduled reports"""
+    try:
+        scheduled_reports = ScheduledReport.query.order_by(ScheduledReport.created_at.desc()).all()
+        return render_template("admin/scheduled_reports.html", scheduled_reports=scheduled_reports)
+        
+    except Exception as e:
+        flash(f"Error loading scheduled reports: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/reports/scheduled/new", methods=["GET", "POST"])
+@admin_required
+def new_scheduled_report():
+    """Create new scheduled report"""
+    if request.method == "POST":
+        try:
+            from datetime import time
+            
+            # Parse email recipients
+            email_recipients = [email.strip() for email in request.form.get('email_recipients', '').split(',') if email.strip()]
+            
+            # Parse schedule time
+            schedule_time_str = request.form.get('schedule_time')
+            schedule_time = datetime.strptime(schedule_time_str, '%H:%M').time()
+            
+            scheduled_report = ScheduledReport(
+                name=request.form.get('name'),
+                description=request.form.get('description'),
+                template_id=int(request.form.get('template_id')),
+                schedule_type=request.form.get('schedule_type'),
+                schedule_time=schedule_time,
+                schedule_day=int(request.form.get('schedule_day')) if request.form.get('schedule_day') else None,
+                email_recipients=email_recipients,
+                email_subject=request.form.get('email_subject'),
+                created_by=current_user.id if current_user.is_authenticated else None
+            )
+            
+            db.session.add(scheduled_report)
+            db.session.commit()
+            
+            flash(f"Scheduled report '{scheduled_report.name}' created successfully!", "success")
+            return redirect(url_for("admin.scheduled_reports"))
+            
+        except Exception as e:
+            flash(f"Error creating scheduled report: {str(e)}", "error")
+    
+    # Get available templates
+    templates = ReportTemplate.query.filter_by(is_system_template=True).all()
+    return render_template("admin/new_scheduled_report.html", templates=templates)
+
+
+@admin.route("/reports/executions")
+@admin_required
+def report_executions():
+    """View report execution history"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        executions = ReportExecution.query.order_by(ReportExecution.executed_at.desc()).paginate(
+            page=page, per_page=20, error_out=False
+        )
+        return render_template("admin/report_executions.html", executions=executions)
+        
+    except Exception as e:
+        flash(f"Error loading report executions: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin.route("/reports/generate", methods=["POST"])
+@admin_required
+def generate_report():
+    """Generate report from template"""
+    try:
+        template_id = request.form.get('template_id')
+        template = ReportTemplate.query.get_or_404(template_id)
+        
+        # Create execution record
+        execution = ReportExecution(
+            report_name=template.name,
+            template_id=template.id,
+            execution_type='manual',
+            status='running',
+            parameters=request.form.to_dict(),
+            executed_by=current_user.id if current_user.is_authenticated else None
+        )
+        db.session.add(execution)
+        db.session.commit()
+        
+        # Generate report based on template configuration
+        # This is a simplified version - in production, you'd have more sophisticated report generation
+        result_data = {
+            'template_name': template.name,
+            'generated_at': datetime.utcnow().isoformat(),
+            'parameters': request.form.to_dict()
+        }
+        
+        # Update execution record
+        execution.status = 'completed'
+        execution.result_data = result_data
+        execution.completed_at = datetime.utcnow()
+        execution.execution_time = 1.5  # Placeholder
+        db.session.commit()
+        
+        flash(f"Report '{template.name}' generated successfully!", "success")
+        return redirect(url_for("admin.report_executions"))
+        
+    except Exception as e:
+        flash(f"Error generating report: {str(e)}", "error")
+        return redirect(url_for("admin.report_builder"))

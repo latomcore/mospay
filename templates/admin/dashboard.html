@@ -135,6 +135,42 @@
 
             <!-- Heading -->
             <div class="sidebar-heading">
+                Analytics & Reports
+            </div>
+
+            <!-- Nav Item - Analytics Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.analytics_dashboard') }}">
+                    <i class="fas fa-fw fa-chart-line"></i>
+                    <span>Analytics Dashboard</span></a>
+            </li>
+
+            <!-- Nav Item - Report Builder -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.report_builder') }}">
+                    <i class="fas fa-fw fa-tools"></i>
+                    <span>Report Builder</span></a>
+            </li>
+
+            <!-- Nav Item - Report Templates -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.report_templates') }}">
+                    <i class="fas fa-fw fa-file-alt"></i>
+                    <span>Report Templates</span></a>
+            </li>
+
+            <!-- Nav Item - Scheduled Reports -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.scheduled_reports') }}">
+                    <i class="fas fa-fw fa-clock"></i>
+                    <span>Scheduled Reports</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
                 Monitoring
             </div>
 

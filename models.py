@@ -266,6 +266,77 @@ class FraudDetection(db.Model):
     reviewer = db.relationship("User", backref="fraud_reviews")
 
 
+class ReportTemplate(db.Model):
+    """Report templates for custom report builder"""
+    __tablename__ = "report_templates"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    category = db.Column(db.String(50), nullable=False)  # revenue, transactions, clients, custom
+    template_type = db.Column(db.String(50), nullable=False)  # table, chart, summary
+    configuration = db.Column(db.JSON, nullable=False)  # Report configuration
+    is_system_template = db.Column(db.Boolean, default=False)  # System vs user-created
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    creator = db.relationship("User", backref="created_reports")
+
+
+class ScheduledReport(db.Model):
+    """Scheduled report configurations"""
+    __tablename__ = "scheduled_reports"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    template_id = db.Column(db.Integer, db.ForeignKey("report_templates.id"), nullable=False)
+    schedule_type = db.Column(db.String(20), nullable=False)  # daily, weekly, monthly
+    schedule_time = db.Column(db.Time, nullable=False)  # Time of day to run
+    schedule_day = db.Column(db.Integer, nullable=True)  # Day of week/month (1-7 for weekly, 1-31 for monthly)
+    email_recipients = db.Column(db.JSON, nullable=False)  # List of email addresses
+    email_subject = db.Column(db.String(200))
+    is_active = db.Column(db.Boolean, default=True)
+    last_run = db.Column(db.DateTime, nullable=True)
+    next_run = db.Column(db.DateTime, nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    template = db.relationship("ReportTemplate", backref="scheduled_reports")
+    creator = db.relationship("User", backref="scheduled_reports")
+
+
+class ReportExecution(db.Model):
+    """Track report execution history"""
+    __tablename__ = "report_executions"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    report_name = db.Column(db.String(200), nullable=False)
+    template_id = db.Column(db.Integer, db.ForeignKey("report_templates.id"), nullable=True)
+    scheduled_report_id = db.Column(db.Integer, db.ForeignKey("scheduled_reports.id"), nullable=True)
+    execution_type = db.Column(db.String(20), nullable=False)  # manual, scheduled
+    status = db.Column(db.String(20), default="running")  # running, completed, failed
+    parameters = db.Column(db.JSON)  # Report parameters used
+    result_data = db.Column(db.JSON)  # Report results
+    file_path = db.Column(db.String(500))  # Path to generated file
+    file_format = db.Column(db.String(20))  # pdf, csv, excel
+    file_size = db.Column(db.Integer)  # File size in bytes
+    execution_time = db.Column(db.Float)  # Execution time in seconds
+    error_message = db.Column(db.Text)
+    executed_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    executed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    
+    # Relationships
+    template = db.relationship("ReportTemplate", backref="executions")
+    scheduled_report = db.relationship("ScheduledReport", backref="executions")
+    executor = db.relationship("User", backref="report_executions")
+
+
 class AlertRule(db.Model):
     __tablename__ = "alert_rules"
 
