@@ -262,6 +262,7 @@ def transactions():
         service_options = [s[0] for s in services if s[0]]
         
         return render_template("client/transactions.html",
+                             client=client_obj,
                              transactions=transactions,
                              service_options=service_options,
                              current_filters={
