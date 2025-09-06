@@ -296,7 +296,19 @@
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Settings</h1>
+                        <div>
+                            <h1 class="h3 mb-0 text-gray-800">Settings</h1>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item">
+                                        <a href="{{ url_for('client.dashboard') }}">
+                                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                                        </a>
+                                    </li>
+                                    <li class="breadcrumb-item active" aria-current="page">Settings</li>
+                                </ol>
+                            </nav>
+                        </div>
                         <div class="text-muted">
                             <small>App ID: {{ client.app_id }}</small>
                         </div>

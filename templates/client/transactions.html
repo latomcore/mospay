@@ -312,7 +312,19 @@
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Transaction History</h1>
+                        <div>
+                            <h1 class="h3 mb-0 text-gray-800">Transaction History</h1>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item">
+                                        <a href="{{ url_for('client.dashboard') }}">
+                                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                                        </a>
+                                    </li>
+                                    <li class="breadcrumb-item active" aria-current="page">Transactions</li>
+                                </ol>
+                            </nav>
+                        </div>
                         <div class="text-muted">
                             <small>App ID: {{ client.app_id }}</small>
                         </div>
@@ -458,7 +470,7 @@
                                                     <td>
                                                         <div class="btn-group" role="group">
                                                             <button class="btn btn-info btn-sm" 
-                                                                    onclick="showTransactionDetails('{{ transaction.unique_id }}', '{{ transaction.service.name }}', '{{ transaction.amount or 'N/A' }}', '{{ transaction.mobile_number or 'N/A' }}', '{{ transaction.status }}', '{{ transaction.created_at.strftime('%Y-%m-%d %H:%M:%S') }}', '{{ transaction.request_payload or '{}' }}', '{{ transaction.response_payload or '{}' }}')"
+                                                                    onclick="showTransactionDetails('{{ transaction.unique_id }}', '{{ transaction.service.name }}', '{{ transaction.amount or 'N/A' }}', '{{ transaction.mobile_number or 'N/A' }}', '{{ transaction.status }}', '{{ transaction.created_at.strftime('%Y-%m-%d %H:%M:%S') }}', {{ (transaction.request_payload|tojson) if transaction.request_payload else '{}' }}, {{ (transaction.response_payload|tojson) if transaction.response_payload else '{}' }})"
                                                                     title="View Details">
                                                                 <i class="fas fa-info-circle"></i>
                                                             </button>
@@ -649,6 +661,26 @@
 
         // Show transaction details modal
         function showTransactionDetails(transactionId, service, amount, mobileNumber, status, created, requestPayload, responsePayload) {
+            // Handle JSON payloads safely
+            let requestPayloadStr = 'No data';
+            let responsePayloadStr = 'No data';
+            
+            try {
+                if (requestPayload && requestPayload !== '{}' && requestPayload !== 'N/A') {
+                    requestPayloadStr = JSON.stringify(requestPayload, null, 2);
+                }
+            } catch (e) {
+                requestPayloadStr = 'Invalid JSON data';
+            }
+            
+            try {
+                if (responsePayload && responsePayload !== '{}' && responsePayload !== 'N/A') {
+                    responsePayloadStr = JSON.stringify(responsePayload, null, 2);
+                }
+            } catch (e) {
+                responsePayloadStr = 'Invalid JSON data';
+            }
+            
             const modalHtml = `
                 <div class="modal fade" id="transactionDetailsModal" tabindex="-1" role="dialog">
                     <div class="modal-dialog modal-lg" role="document">
@@ -678,11 +710,11 @@
                                         <h6>Payload Information</h6>
                                         <div class="mb-3">
                                             <strong>Request Payload:</strong>
-                                            <pre class="bg-light p-2 rounded" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem;">${JSON.stringify(JSON.parse(requestPayload), null, 2)}</pre>
+                                            <pre class="bg-light p-2 rounded" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem;">${requestPayloadStr}</pre>
                                         </div>
                                         <div class="mb-3">
                                             <strong>Response Payload:</strong>
-                                            <pre class="bg-light p-2 rounded" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem;">${JSON.stringify(JSON.parse(responsePayload), null, 2)}</pre>
+                                            <pre class="bg-light p-2 rounded" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem;">${responsePayloadStr}</pre>
                                         </div>
                                     </div>
                                 </div>
