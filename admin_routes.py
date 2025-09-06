@@ -1197,6 +1197,38 @@ def regenerate_credentials(client_id):
     return redirect(url_for("admin.view_client", client_id=client_id))
 
 
+@admin.route("/clients/<int:client_id>/set-portal-password", methods=["POST"])
+@admin_required
+def set_client_portal_password(client_id):
+    """Set portal password for client access"""
+    try:
+        client = Client.query.get_or_404(client_id)
+        password = request.form.get("portal_password", "").strip()
+        
+        if not password:
+            flash("❌ Password is required", "error")
+            return redirect(url_for("admin.view_client", client_id=client_id))
+        
+        if len(password) < 6:
+            flash("❌ Password must be at least 6 characters long", "error")
+            return redirect(url_for("admin.view_client", client_id=client_id))
+        
+        # Set portal password
+        client.set_portal_password(password)
+        client.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        flash(f"✅ Portal password set for {client.company_name}", "success")
+        flash(f"Client can now access portal at: /client/login", "info")
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f"❌ Error setting portal password: {str(e)}", "error")
+    
+    return redirect(url_for("admin.view_client", client_id=client_id))
+
+
 @admin.route("/api/clients/<int:client_id>/transactions")
 @admin_required
 def client_transactions_api(client_id):

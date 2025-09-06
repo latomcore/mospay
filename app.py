@@ -57,10 +57,12 @@ def create_app():
     from api_routes import api
     from admin_routes import admin
     from auth_routes import auth_bp
+    from client_routes import client
 
     app.register_blueprint(api, url_prefix="/api/v1")
     app.register_blueprint(admin, url_prefix="/admin")
     app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(client, url_prefix="/client")
 
     # Database connection error handler
     @app.errorhandler(500)

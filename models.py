@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 
 db = SQLAlchemy()
@@ -52,6 +52,13 @@ class Client(db.Model):
     updated_at = db.Column(
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+    
+    # Client Portal Authentication Fields
+    portal_password_hash = db.Column(db.String(255), nullable=True)  # Separate password for client portal
+    last_login = db.Column(db.DateTime, nullable=True)
+    login_attempts = db.Column(db.Integer, default=0)
+    account_locked = db.Column(db.Boolean, default=False)
+    locked_until = db.Column(db.DateTime, nullable=True)
 
     # Relationships
     services = db.relationship(
@@ -66,6 +73,56 @@ class Client(db.Model):
 
     def check_api_password(self, password):
         return bcrypt.check_password_hash(self.api_password_hash, password)
+    
+    # Client Portal Authentication Methods
+    def set_portal_password(self, password):
+        """Set password for client portal access"""
+        self.portal_password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
+    
+    def check_portal_password(self, password):
+        """Check password for client portal access"""
+        if not self.portal_password_hash:
+            return False
+        return bcrypt.check_password_hash(self.portal_password_hash, password)
+    
+    def is_account_locked(self):
+        """Check if account is currently locked"""
+        if not self.account_locked:
+            return False
+        if self.locked_until and self.locked_until > datetime.utcnow():
+            return True
+        # Unlock account if lock period has expired
+        self.account_locked = False
+        self.locked_until = None
+        self.login_attempts = 0
+        db.session.commit()
+        return False
+    
+    def lock_account(self, minutes=30):
+        """Lock account for specified minutes"""
+        self.account_locked = True
+        self.locked_until = datetime.utcnow() + timedelta(minutes=minutes)
+        db.session.commit()
+    
+    def reset_login_attempts(self):
+        """Reset failed login attempts"""
+        self.login_attempts = 0
+        self.account_locked = False
+        self.locked_until = None
+        db.session.commit()
+    
+    def increment_login_attempts(self):
+        """Increment failed login attempts"""
+        self.login_attempts += 1
+        if self.login_attempts >= 5:  # Lock after 5 failed attempts
+            self.lock_account()
+        db.session.commit()
+    
+    def update_last_login(self):
+        """Update last login timestamp"""
+        self.last_login = datetime.utcnow()
+        self.reset_login_attempts()
+        db.session.commit()
 
 
 class Service(db.Model):
