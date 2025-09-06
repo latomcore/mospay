@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="MosPay - Client Transactions">
+    <meta name="author" content="MosPay">
+
+    <title>Transactions - {{ client.company_name }} | MosPay</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"
+        type="text/css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
+
+    <style>
+        .sidebar {
+            background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+        }
+
+        .sidebar-brand {
+            color: #fff !important;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .nav-link:hover {
+            color: #fff !important;
+        }
+
+        .nav-link.active {
+            color: #fff !important;
+        }
+
+        .card {
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+        }
+
+        /* Ensure sidebar is visible and properly styled */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+            background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+        }
+
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 48px);
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .sidebar .nav-link {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .sidebar .nav-link:hover {
+            color: #fff !important;
+        }
+
+        .sidebar .nav-link.active {
+            color: #fff !important;
+        }
+
+        .sidebar-heading {
+            font-size: .75rem;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .sidebar-brand {
+            color: #fff !important;
+        }
+
+        .sidebar-divider {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        @media (max-width: 767.98px) {
+            .sidebar {
+                top: 5rem;
+            }
+        }
+
+        /* Content wrapper adjustments */
+        #content-wrapper {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            #content-wrapper {
+                margin-left: 14rem;
+            }
+        }
+
+        /* Sidebar toggled state */
+        body.sidebar-toggled .sidebar {
+            margin-left: -14rem;
+        }
+
+        body.sidebar-toggled #content-wrapper {
+            margin-left: 0;
+        }
+
+        @media (max-width: 767.98px) {
+            body.sidebar-toggled .sidebar {
+                margin-left: 0;
+            }
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .transaction-id {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .filter-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body id="page-top" class="sidebar-toggled">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('client.dashboard') }}">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">MosPay</div>
+            </a>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider my-0">
+
+            <!-- Nav Item - Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('client.dashboard') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Transactions
+            </div>
+
+            <!-- Nav Item - Transactions -->
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('client.transactions') }}">
+                    <i class="fas fa-fw fa-exchange-alt"></i>
+                    <span>All Transactions</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Services
+            </div>
+
+            <!-- Nav Item - Services -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('client.services') }}">
+                    <i class="fas fa-fw fa-cogs"></i>
+                    <span>My Services</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                API & Integration
+            </div>
+
+            <!-- Nav Item - API Keys -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('client.api_keys') }}">
+                    <i class="fas fa-fw fa-key"></i>
+                    <span>API Keys</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Account
+            </div>
+
+            <!-- Nav Item - Settings -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('client.settings') }}">
+                    <i class="fas fa-fw fa-cog"></i>
+                    <span>Settings</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Sidebar Toggler (Sidebar) -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+
+        </ul>
+        <!-- End of Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+                    <!-- Sidebar Toggle (Topbar) -->
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <!-- Topbar Navbar -->
+                    <ul class="navbar-nav ml-auto">
+
+                        <!-- Nav Item - User Information -->
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ client.company_name }}</span>
+                                <i class="fas fa-user-circle fa-2x text-gray-300"></i>
+                            </a>
+                            <!-- Dropdown - User Information -->
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="{{ url_for('client.settings') }}">
+                                    <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Settings
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{{ url_for('client.logout') }}">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+
+                    </ul>
+
+                </nav>
+                <!-- End of Topbar -->
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    {% if category == 'success' %}
+                                        <i class="fas fa-check-circle"></i>
+                                    {% elif category == 'error' %}
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    {% elif category == 'info' %}
+                                        <i class="fas fa-info-circle"></i>
+                                    {% endif %}
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Transaction History</h1>
+                        <div class="text-muted">
+                            <small>App ID: {{ client.app_id }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Filters Card -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card filter-card shadow">
+                                <div class="card-body">
+                                    <form method="GET" action="{{ url_for('client.transactions') }}" class="row g-3">
+                                        <div class="col-md-3">
+                                            <label for="status" class="form-label text-white">Status</label>
+                                            <select class="form-select" id="status" name="status">
+                                                <option value="">All Statuses</option>
+                                                <option value="pending" {{ 'selected' if current_filters.status == 'pending' }}>Pending</option>
+                                                <option value="processing" {{ 'selected' if current_filters.status == 'processing' }}>Processing</option>
+                                                <option value="completed" {{ 'selected' if current_filters.status == 'completed' }}>Completed</option>
+                                                <option value="failed" {{ 'selected' if current_filters.status == 'failed' }}>Failed</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="service" class="form-label text-white">Service</label>
+                                            <select class="form-select" id="service" name="service">
+                                                <option value="">All Services</option>
+                                                {% for service_name in service_options %}
+                                                <option value="{{ service_name }}" {{ 'selected' if current_filters.service == service_name }}>
+                                                    {{ service_name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="date_from" class="form-label text-white">From Date</label>
+                                            <input type="date" class="form-control" id="date_from" name="date_from" 
+                                                   value="{{ current_filters.date_from }}">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="date_to" class="form-label text-white">To Date</label>
+                                            <input type="date" class="form-control" id="date_to" name="date_to" 
+                                                   value="{{ current_filters.date_to }}">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="search" class="form-label text-white">Search</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="search" name="search" 
+                                                       placeholder="Transaction ID..." value="{{ current_filters.search }}">
+                                                <button type="submit" class="btn btn-light">
+                                                    <i class="fas fa-search"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <a href="{{ url_for('client.transactions') }}" class="btn btn-outline-light btn-sm me-2">
+                                                <i class="fas fa-times"></i> Clear Filters
+                                            </a>
+                                            <button class="btn btn-outline-light btn-sm" onclick="exportTransactions()">
+                                                <i class="fas fa-download"></i> Export
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Table -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-exchange-alt"></i> 
+                                        Transactions 
+                                        {% if current_filters.service %}
+                                            - {{ current_filters.service }}
+                                        {% endif %}
+                                        ({{ transactions.total }} total)
+                                    </h6>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="refreshTransactions()">
+                                            <i class="fas fa-sync-alt"></i> Refresh
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    {% if transactions.items %}
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover" width="100%" cellspacing="0" id="transactionsTable">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Transaction ID</th>
+                                                    <th>Service</th>
+                                                    <th>Amount</th>
+                                                    <th>Mobile Number</th>
+                                                    <th>Status</th>
+                                                    <th>Created</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for transaction in transactions.items %}
+                                                <tr>
+                                                    <td>
+                                                        <div class="transaction-id">
+                                                            <strong>{{ transaction.unique_id }}</strong>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="fas fa-cog text-primary me-2"></i>
+                                                            <span>{{ transaction.service.name }}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        {% if transaction.amount %}
+                                                            <span class="font-weight-bold">${{ "%.2f"|format(transaction.amount) }}</span>
+                                                        {% else %}
+                                                            <span class="text-muted">N/A</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if transaction.mobile_number %}
+                                                            <span>{{ transaction.mobile_number }}</span>
+                                                        {% else %}
+                                                            <span class="text-muted">N/A</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge status-badge badge-{{ 'success' if transaction.status == 'completed' else 'warning' if transaction.status == 'processing' else 'info' if transaction.status == 'pending' else 'danger' }}">
+                                                            <i class="fas fa-{{ 'check-circle' if transaction.status == 'completed' else 'clock' if transaction.status == 'processing' else 'hourglass-half' if transaction.status == 'pending' else 'times-circle' }}"></i>
+                                                            {{ transaction.status.title() }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div>
+                                                            <div>{{ transaction.created_at.strftime('%Y-%m-%d') }}</div>
+                                                            <small class="text-muted">{{ transaction.created_at.strftime('%H:%M:%S') }}</small>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group" role="group">
+                                                            <button class="btn btn-info btn-sm" 
+                                                                    onclick="showTransactionDetails('{{ transaction.unique_id }}', '{{ transaction.service.name }}', '{{ transaction.amount or 'N/A' }}', '{{ transaction.mobile_number or 'N/A' }}', '{{ transaction.status }}', '{{ transaction.created_at.strftime('%Y-%m-%d %H:%M:%S') }}', '{{ transaction.request_payload or '{}' }}', '{{ transaction.response_payload or '{}' }}')"
+                                                                    title="View Details">
+                                                                <i class="fas fa-info-circle"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Pagination -->
+                                    {% if transactions.pages > 1 %}
+                                    <nav aria-label="Transaction pagination">
+                                        <ul class="pagination justify-content-center">
+                                            {% if transactions.has_prev %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('client.transactions', page=transactions.prev_num, **current_filters) }}">Previous</a>
+                                                </li>
+                                            {% endif %}
+                                            
+                                            {% for page_num in transactions.iter_pages() %}
+                                                {% if page_num %}
+                                                    {% if page_num != transactions.page %}
+                                                        <li class="page-item">
+                                                            <a class="page-link" href="{{ url_for('client.transactions', page=page_num, **current_filters) }}">{{ page_num }}</a>
+                                                        </li>
+                                                    {% else %}
+                                                        <li class="page-item active">
+                                                            <span class="page-link">{{ page_num }}</span>
+                                                        </li>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <li class="page-item disabled">
+                                                        <span class="page-link">...</span>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if transactions.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('client.transactions', page=transactions.next_num, **current_filters) }}">Next</a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                    {% endif %}
+                                    {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-exchange-alt fa-3x text-gray-300 mb-3"></i>
+                                        <h5 class="text-gray-600">No Transactions Found</h5>
+                                        <p class="text-gray-500">
+                                            {% if current_filters.status or current_filters.service or current_filters.date_from or current_filters.date_to or current_filters.search %}
+                                                No transactions match your current filters. Try adjusting your search criteria.
+                                            {% else %}
+                                                You don't have any transactions yet. Transactions will appear here once you start using the API.
+                                            {% endif %}
+                                        </p>
+                                        {% if current_filters.status or current_filters.service or current_filters.date_from or current_filters.date_to or current_filters.search %}
+                                        <a href="{{ url_for('client.transactions') }}" class="btn btn-primary">
+                                            <i class="fas fa-times"></i> Clear Filters
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- /.container-fluid -->
+
+            </div>
+            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; MosPay 2025</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="https://cdn.jsdelivr.net/npm/jquery.easing@1.4.1/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for this template-->
+    <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+
+    <script>
+        // Sidebar toggle functionality
+        $("#sidebarToggle, #sidebarToggleTop").on('click', function(e) {
+            $("body").toggleClass("sidebar-toggled");
+            $(".sidebar").toggleClass("toggled");
+            if ($(".sidebar").hasClass("toggled")) {
+                $('.sidebar .collapse').collapse('hide');
+            };
+        });
+
+        // Close any open menu accordions when window is resized below 768px
+        $(window).resize(function() {
+            if ($(window).width() < 768) {
+                $('.sidebar .collapse').collapse('hide');
+            };
+        });
+
+        // Prevent the content wrapper from scrolling when the fixed side navigation is hovered over
+        $('body.fixed-nav .sidebar').on('mousewheel DOMMouseScroll wheel', function(e) {
+            if ($(window).width() > 768) {
+                var e0 = e.originalEvent,
+                    delta = e0.wheelDelta || -e0.detail;
+                this.scrollTop += (delta < 0 ? 1 : -1) * 30;
+                e.preventDefault();
+            }
+        });
+
+        // Scroll to top button appear
+        $(document).on('scroll', function() {
+            var scrollDistance = $(this).scrollTop();
+            if (scrollDistance > 100) {
+                $('.scroll-to-top').fadeIn();
+            } else {
+                $('.scroll-to-top').fadeOut();
+            }
+        });
+
+        // Smooth scrolling using jQuery easing
+        $(document).on('click', 'a.scroll-to-top', function(e) {
+            var $anchor = $(this);
+            $('html, body').stop().animate({
+                scrollTop: ($($anchor.attr('href')).offset().top)
+            }, 1000, 'easeInOutExpo');
+            e.preventDefault();
+        });
+
+        // Export transactions functionality
+        function exportTransactions() {
+            // Create CSV content
+            let csvContent = "Transaction ID,Service,Amount,Mobile Number,Status,Created Date,Created Time\n";
+            
+            $('#transactionsTable tbody tr').each(function() {
+                const row = $(this);
+                const transactionId = row.find('td:eq(0) strong').text().trim();
+                const service = row.find('td:eq(1) span').text().trim();
+                const amount = row.find('td:eq(2) span').text().trim();
+                const mobileNumber = row.find('td:eq(3) span').text().trim();
+                const status = row.find('td:eq(4) .badge').text().trim();
+                const createdDate = row.find('td:eq(5) div:first').text().trim();
+                const createdTime = row.find('td:eq(5) small').text().trim();
+                
+                csvContent += `"${transactionId}","${service}","${amount}","${mobileNumber}","${status}","${createdDate}","${createdTime}"\n`;
+            });
+            
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'transactions_export.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Refresh transactions functionality
+        function refreshTransactions() {
+            location.reload();
+        }
+
+        // Show transaction details modal
+        function showTransactionDetails(transactionId, service, amount, mobileNumber, status, created, requestPayload, responsePayload) {
+            const modalHtml = `
+                <div class="modal fade" id="transactionDetailsModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-exchange-alt"></i> Transaction Details
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Transaction Information</h6>
+                                        <p><strong>Transaction ID:</strong> ${transactionId}</p>
+                                        <p><strong>Service:</strong> ${service}</p>
+                                        <p><strong>Amount:</strong> ${amount}</p>
+                                        <p><strong>Mobile Number:</strong> ${mobileNumber}</p>
+                                        <p><strong>Status:</strong> 
+                                            <span class="badge badge-${status === 'completed' ? 'success' : status === 'processing' ? 'warning' : status === 'pending' ? 'info' : 'danger'}">
+                                                ${status.charAt(0).toUpperCase() + status.slice(1)}
+                                            </span>
+                                        </p>
+                                        <p><strong>Created:</strong> ${created}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Payload Information</h6>
+                                        <div class="mb-3">
+                                            <strong>Request Payload:</strong>
+                                            <pre class="bg-light p-2 rounded" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem;">${JSON.stringify(JSON.parse(requestPayload), null, 2)}</pre>
+                                        </div>
+                                        <div class="mb-3">
+                                            <strong>Response Payload:</strong>
+                                            <pre class="bg-light p-2 rounded" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem;">${JSON.stringify(JSON.parse(responsePayload), null, 2)}</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            $('#transactionDetailsModal').remove();
+            
+            // Add modal to body
+            $('body').append(modalHtml);
+            
+            // Show modal
+            $('#transactionDetailsModal').modal('show');
+        }
+
+        // Initialize DataTable for better table functionality
+        $(document).ready(function() {
+            if ($.fn.DataTable) {
+                $('#transactionsTable').DataTable({
+                    "pageLength": 25,
+                    "order": [[ 5, "desc" ]], // Sort by created date
+                    "columnDefs": [
+                        { "orderable": false, "targets": 6 } // Disable sorting on Actions column
+                    ],
+                    "language": {
+                        "search": "Search transactions:",
+                        "lengthMenu": "Show _MENU_ transactions per page",
+                        "info": "Showing _START_ to _END_ of _TOTAL_ transactions",
+                        "infoEmpty": "No transactions found",
+                        "infoFiltered": "(filtered from _MAX_ total transactions)"
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>
