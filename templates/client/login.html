@@ -25,36 +25,36 @@
         .bg-gradient-primary {
             background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
         }
-        
+
         .btn-primary {
             background-color: #4e73df;
             border-color: #4e73df;
         }
-        
+
         .btn-primary:hover {
             background-color: #224abe;
             border-color: #224abe;
         }
-        
+
         .text-primary {
             color: #4e73df !important;
         }
-        
+
         .card {
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
         }
-        
+
         .login-logo {
             font-size: 2.5rem;
             font-weight: 300;
             color: #fff;
         }
-        
+
         .login-subtitle {
             color: rgba(255, 255, 255, 0.8);
             font-size: 1.1rem;
         }
-        
+
         .bg-login-image {
             background: url('{{ url_for("static", filename="images/mospay_image_blue_background.png") }}') center center;
             background-size: contain;
@@ -63,54 +63,54 @@
             min-height: 100vh;
             border-radius: 20px;
         }
-        
+
         /* Form styling for better visibility */
         .form-label {
             color: #fff !important;
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
-        
+
         .form-control {
             background-color: rgba(255, 255, 255, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: #333;
         }
-        
+
         .form-control:focus {
             background-color: #fff;
             border-color: #4e73df;
             box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
         }
-        
+
         .form-control::placeholder {
             color: #666;
         }
-        
+
         /* Mobile responsiveness */
         @media (max-width: 991.98px) {
             .bg-login-image {
                 display: none !important;
             }
-            
+
             .container {
                 padding: 1rem;
             }
-            
+
             .col-lg-6 {
                 padding: 0.5rem;
             }
         }
-        
+
         @media (max-width: 576px) {
             .container {
                 padding: 0.5rem;
             }
-            
+
             .p-5 {
                 padding: 2rem !important;
             }
-            
+
             .btn {
                 font-size: 0.9rem;
                 padding: 0.75rem 1.5rem;
@@ -124,69 +124,74 @@
         <!-- Outer Row -->
         <div class="row justify-content-center">
             <div class="col-xl-10 col-lg-12 col-md-9">
-                <div class="row">
-                    <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
-                    <div class="col-lg-6">
-                        <div class="p-5">
-                            <div class="text-center">
-                                <div class="mb-4">
-                                    <img src="{{ url_for('static', filename='images/mospay_image_white_background.png') }}" 
-                                         alt="MOS Technologies" 
-                                         style="max-height: 60px; width: auto;">
-                                </div>
-                                <h1 class="h4 text-gray-900 mb-4">Client Portal</h1>
-                                <p class="login-subtitle mb-4">Mos Payment - Gateway</p>
-                            </div>
-
-                            <!-- Flash Messages -->
-                            {% with messages = get_flashed_messages(with_categories=true) %}
-                                {% if messages %}
-                                    {% for category, message in messages %}
-                                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                                            {% if category == 'success' %}
-                                                <i class="fas fa-check-circle"></i>
-                                            {% elif category == 'error' %}
-                                                <i class="fas fa-exclamation-circle"></i>
-                                            {% elif category == 'warning' %}
-                                                <i class="fas fa-exclamation-triangle"></i>
-                                            {% elif category == 'info' %}
-                                                <i class="fas fa-info-circle"></i>
-                                            {% endif %}
-                                            {{ message }}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-0">
+                        <div class="row">
+                            <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
+                            <div class="col-lg-6">
+                                <div class="p-5">
+                                    <div class="text-center">
+                                        <div class="mb-4">
+                                            <img src="{{ url_for('static', filename='images/mospay_image_white_background.png') }}"
+                                                alt="MOS Technologies" style="max-height: 60px; width: auto;">
                                         </div>
+                                        <h1 class="h4 text-gray-900 mb-4">Client Portal</h1>
+                                        <p class="login-subtitle mb-4">Mos Payment - Gateway</p>
+                                    </div>
+
+                                    <!-- Flash Messages -->
+                                    {% with messages = get_flashed_messages(with_categories=true) %}
+                                    {% if messages %}
+                                    {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+                                        role="alert">
+                                        {% if category == 'success' %}
+                                        <i class="fas fa-check-circle"></i>
+                                        {% elif category == 'error' %}
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {% elif category == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        {% elif category == 'info' %}
+                                        <i class="fas fa-info-circle"></i>
+                                        {% endif %}
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                            aria-label="Close"></button>
+                                    </div>
                                     {% endfor %}
-                                {% endif %}
-                            {% endwith %}
+                                    {% endif %}
+                                    {% endwith %}
 
-                            <form class="user" method="POST">
-                                <div class="form-group mb-3">
-                                    <label for="email" class="form-label">Email Address</label>
-                                    <input type="email" class="form-control form-control-user" id="email" name="email"
-                                        placeholder="Enter your email address" required>
-                                </div>
-                                <div class="form-group mb-3">
-                                    <label for="password" class="form-label">Password</label>
-                                    <input type="password" class="form-control form-control-user" id="password" name="password"
-                                        placeholder="Enter your password" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary btn-user btn-block w-100">
-                                    <i class="fas fa-sign-in-alt"></i> Login
-                                </button>
-                            </form>
+                                    <form class="user" method="POST">
+                                        <div class="form-group mb-3">
+                                            <label for="email" class="form-label">Email Address</label>
+                                            <input type="email" class="form-control form-control-user" id="email"
+                                                name="email" placeholder="Enter your email address" required>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="password" class="form-label">Password</label>
+                                            <input type="password" class="form-control form-control-user" id="password"
+                                                name="password" placeholder="Enter your password" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-user btn-block w-100">
+                                            <i class="fas fa-sign-in-alt"></i> Login
+                                        </button>
+                                    </form>
 
-                            <hr>
-                            
-                            <div class="text-center">
-                                <a class="small text-white" href="{{ url_for('auth.login') }}">
-                                    <i class="fas fa-user-shield"></i> Admin Login
-                                </a>
-                            </div>
-                            
-                            <div class="text-center mt-3">
-                                <a class="small text-white" href="{{ url_for('docs') }}">
-                                    <i class="fas fa-book"></i> API Documentation
-                                </a>
+                                    <hr>
+
+                                    <div class="text-center">
+                                        <a class="small text-white" href="{{ url_for('auth.login') }}">
+                                            <i class="fas fa-user-shield"></i> Admin Login
+                                        </a>
+                                    </div>
+
+                                    <div class="text-center mt-3">
+                                        <a class="small text-white" href="{{ url_for('docs') }}">
+                                            <i class="fas fa-book"></i> API Documentation
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -201,7 +206,8 @@
 
     <script>
         // Auto-dismiss alerts after 5 seconds
-        setTimeout(function() {
+        setTimeout(function ()
+        {
             $('.alert').fadeOut('slow');
         }, 5000);
     </script>
