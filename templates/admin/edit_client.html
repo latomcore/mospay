@@ -317,6 +317,73 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Client Portal Access Card -->
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-user-circle"></i> Client Portal Access
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Portal Status -->
+                                    <div class="mb-3">
+                                        <label class="font-weight-bold">Portal Access:</label>
+                                        {% if client.portal_password_hash %}
+                                            <span class="badge badge-success">
+                                                <i class="fas fa-check-circle"></i> Enabled
+                                            </span>
+                                            <div class="mt-2">
+                                                <a href="{{ url_for('client.login') }}" target="_blank" 
+                                                   class="btn btn-success btn-sm">
+                                                    <i class="fas fa-external-link-alt"></i> Test Portal Login
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                            <span class="badge badge-warning">
+                                                <i class="fas fa-exclamation-triangle"></i> Not Configured
+                                            </span>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Portal Password Form -->
+                                    <div class="mb-3">
+                                        <label class="font-weight-bold">Set Portal Password:</label>
+                                        <form method="POST" action="{{ url_for('admin.set_client_portal_password', client_id=client.id) }}" 
+                                              class="mt-2">
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" name="portal_password" 
+                                                       placeholder="Enter portal password" minlength="6" required>
+                                                <div class="input-group-append">
+                                                    <button type="submit" class="btn btn-primary" 
+                                                            title="Set Portal Password">
+                                                        <i class="fas fa-key"></i> Set Password
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <small class="form-text text-muted">
+                                                Minimum 6 characters. This password is separate from API credentials.
+                                            </small>
+                                        </form>
+                                    </div>
+
+                                    <!-- Portal Information -->
+                                    <div class="alert alert-info">
+                                        <h6 class="alert-heading">
+                                            <i class="fas fa-info-circle"></i> Portal Access Information
+                                        </h6>
+                                        <p class="mb-1">
+                                            <strong>Login URL:</strong> <code>/client/login</code>
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Username:</strong> Client's email address
+                                        </p>
+                                        <p class="mb-0">
+                                            <strong>Password:</strong> Portal password (set above)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

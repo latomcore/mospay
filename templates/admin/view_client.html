@@ -496,6 +496,45 @@
                                             class="btn btn-info btn-sm py-2">
                                             <i class="fas fa-cogs"></i> Manage Services
                                         </a>
+                                        
+                                        <!-- Portal Password Section -->
+                                        <div class="border-top pt-3">
+                                            <h6 class="text-primary mb-2">
+                                                <i class="fas fa-user-circle"></i> Client Portal Access
+                                            </h6>
+                                            {% if client.portal_password_hash %}
+                                                <div class="alert alert-success alert-sm mb-2">
+                                                    <i class="fas fa-check-circle"></i> Portal access enabled
+                                                </div>
+                                                <div class="text-center">
+                                                    <a href="{{ url_for('client.login') }}" target="_blank" 
+                                                       class="btn btn-success btn-sm py-2 w-100 mb-2">
+                                                        <i class="fas fa-external-link-alt"></i> Test Portal Login
+                                                    </a>
+                                                </div>
+                                            {% else %}
+                                                <div class="alert alert-warning alert-sm mb-2">
+                                                    <i class="fas fa-exclamation-triangle"></i> Portal access not configured
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <!-- Set Portal Password Form -->
+                                            <form method="POST" action="{{ url_for('admin.set_client_portal_password', client_id=client.id) }}" 
+                                                  class="mt-2">
+                                                <div class="input-group input-group-sm mb-2">
+                                                    <input type="password" class="form-control" name="portal_password" 
+                                                           placeholder="Enter portal password" minlength="6" required>
+                                                    <div class="input-group-append">
+                                                        <button type="submit" class="btn btn-outline-primary" 
+                                                                title="Set Portal Password">
+                                                            <i class="fas fa-key"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Minimum 6 characters</small>
+                                            </form>
+                                        </div>
+                                        
                                         {% if client.is_active %}
                                         <form method="POST"
                                             action="{{ url_for('admin.toggle_client_status', client_id=client.id) }}"
