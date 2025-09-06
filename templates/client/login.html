@@ -64,25 +64,19 @@
             border-radius: 20px;
         }
 
-        /* Form styling for better visibility */
-        .form-label {
-            color: #fff !important;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
+        /* Form styling to match admin login */
         .form-control {
             background-color: rgba(255, 255, 255, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: #333;
         }
-
+        
         .form-control:focus {
             background-color: #fff;
             border-color: #4e73df;
             box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
         }
-
+        
         .form-control::placeholder {
             color: #666;
         }
@@ -163,17 +157,15 @@
                                     {% endwith %}
 
                                     <form class="user" method="POST">
-                                        <div class="form-group mb-3">
-                                            <label for="email" class="form-label">Email Address</label>
+                                        <div class="form-group">
                                             <input type="email" class="form-control form-control-user" id="email"
-                                                name="email" placeholder="Enter your email address" required>
+                                                name="email" placeholder="Enter Email Address..." required>
                                         </div>
-                                        <div class="form-group mb-3">
-                                            <label for="password" class="form-label">Password</label>
+                                        <div class="form-group">
                                             <input type="password" class="form-control form-control-user" id="password"
-                                                name="password" placeholder="Enter your password" required>
+                                                name="password" placeholder="Password" required>
                                         </div>
-                                        <button type="submit" class="btn btn-primary btn-user btn-block w-100">
+                                        <button type="submit" class="btn btn-primary btn-user btn-block">
                                             <i class="fas fa-sign-in-alt"></i> Login
                                         </button>
                                     </form>
