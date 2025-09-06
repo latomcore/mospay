@@ -79,7 +79,15 @@ class PDFGenerator:
         # Build the content
         story = []
         
-        # Title
+        # Logo and Title
+        try:
+            logo = Image('static/images/mospay_image_black_background.png', width=2*inch, height=0.8*inch)
+            story.append(logo)
+            story.append(Spacer(1, 12))
+        except:
+            # Fallback if logo not found
+            pass
+        
         story.append(Paragraph("MosPay Transaction Report", self.styles['CustomTitle']))
         story.append(Spacer(1, 12))
         
@@ -185,7 +193,15 @@ class PDFGenerator:
         # Build the content
         story = []
         
-        # Title
+        # Logo and Title
+        try:
+            logo = Image('static/images/mospay_image_black_background.png', width=2*inch, height=0.8*inch)
+            story.append(logo)
+            story.append(Spacer(1, 12))
+        except:
+            # Fallback if logo not found
+            pass
+        
         story.append(Paragraph("MosPay Client Performance Report", self.styles['CustomTitle']))
         story.append(Spacer(1, 12))
         
