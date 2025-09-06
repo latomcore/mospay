@@ -61,6 +61,60 @@
             background-repeat: no-repeat;
             background-position: center;
             min-height: 100vh;
+            border-radius: 20px;
+        }
+        
+        /* Form styling for better visibility */
+        .form-label {
+            color: #fff !important;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control {
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #333;
+        }
+        
+        .form-control:focus {
+            background-color: #fff;
+            border-color: #4e73df;
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        }
+        
+        .form-control::placeholder {
+            color: #666;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 991.98px) {
+            .bg-login-image {
+                display: none !important;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .col-lg-6 {
+                padding: 0.5rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .container {
+                padding: 0.5rem;
+            }
+            
+            .p-5 {
+                padding: 2rem !important;
+            }
+            
+            .btn {
+                font-size: 0.9rem;
+                padding: 0.75rem 1.5rem;
+            }
         }
     </style>
 </head>
