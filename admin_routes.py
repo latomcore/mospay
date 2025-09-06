@@ -3016,6 +3016,13 @@ def analytics_dashboard():
     try:
         from datetime import datetime, timedelta
         
+        # Check if analytics tables exist
+        try:
+            ReportTemplate.query.count()
+        except Exception as e:
+            flash("Analytics tables not found. Please run the database migration.", "error")
+            return redirect(url_for("admin.dashboard"))
+        
         # Get date range (default to last 30 days)
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=30)
@@ -3095,6 +3102,13 @@ def analytics_dashboard():
 def report_builder():
     """Custom report builder interface"""
     try:
+        # Check if analytics tables exist
+        try:
+            ReportTemplate.query.count()
+        except Exception as e:
+            flash("Analytics tables not found. Please run the database migration.", "error")
+            return redirect(url_for("admin.dashboard"))
+        
         # Get available templates
         templates = ReportTemplate.query.order_by(ReportTemplate.name).all()
         
@@ -3274,3 +3288,24 @@ def generate_report():
     except Exception as e:
         flash(f"Error generating report: {str(e)}", "error")
         return redirect(url_for("admin.report_builder"))
+
+
+@admin.route("/setup/analytics-tables")
+@admin_required
+def setup_analytics_tables():
+    """Setup analytics tables - one-time setup route"""
+    try:
+        # Create all tables
+        db.create_all()
+        
+        # Test the tables
+        template_count = ReportTemplate.query.count()
+        scheduled_count = ScheduledReport.query.count()
+        execution_count = ReportExecution.query.count()
+        
+        flash(f"✅ Analytics tables created successfully! Found {template_count} templates, {scheduled_count} scheduled reports, {execution_count} executions.", "success")
+        
+    except Exception as e:
+        flash(f"❌ Error creating analytics tables: {str(e)}", "error")
+    
+    return redirect(url_for("admin.dashboard"))
