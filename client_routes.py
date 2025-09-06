@@ -215,7 +215,7 @@ def transactions():
         search = request.args.get("search", "")
         
         # Build query
-        query = Transaction.query.join(Service).filter_by(client_id=client_id)
+        query = Transaction.query.join(Service).filter(Transaction.client_id == client_id)
         
         # Apply filters
         if status_filter:

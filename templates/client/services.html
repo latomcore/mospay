@@ -318,118 +318,31 @@
                         </div>
                     </div>
 
-                    <!-- Content Row -->
-                    <div class="row">
-                        {% if services_data %}
-                            {% for service_data in services_data %}
-                                {% set service = service_data.service %}
-                                {% set total_transactions = service_data.total_transactions %}
-                                {% set last_30d_transactions = service_data.last_30d_transactions %}
-                                {% set success_rate = service_data.success_rate %}
-                                
-                                <div class="col-lg-6 col-xl-4">
-                                    <div class="card service-card shadow mb-4">
-                                        <div class="card-header py-3">
-                                            <h6 class="m-0 font-weight-bold text-primary">
-                                                <i class="fas fa-cog"></i> {{ service.display_name }}
-                                            </h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="mb-3">
-                                                <label class="font-weight-bold">Service Name:</label>
-                                                <div>{{ service.name }}</div>
-                                            </div>
-                                            
-                                            {% if service.description %}
-                                            <div class="mb-3">
-                                                <label class="font-weight-bold">Description:</label>
-                                                <div>{{ service.description }}</div>
-                                            </div>
-                                            {% endif %}
-                                            
-                                            <div class="mb-3">
-                                                <label class="font-weight-bold">Service URL:</label>
-                                                <div class="text-break">
-                                                    <a href="{{ service.service_url }}" target="_blank" class="text-primary">
-                                                        {{ service.service_url }}
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="mb-3">
-                                                <label class="font-weight-bold">Status:</label>
-                                                <span class="badge badge-{{ 'success' if service.is_active else 'danger' }}">
-                                                    {{ 'Active' if service.is_active else 'Inactive' }}
-                                                </span>
-                                            </div>
-                                            
-                                            <hr>
-                                            
-                                            <!-- Performance Metrics -->
-                                            <div class="row text-center">
-                                                <div class="col-4">
-                                                    <div class="metric-card">
-                                                        <div class="h5 mb-0">{{ total_transactions }}</div>
-                                                        <div class="small">Total</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-4">
-                                                    <div class="metric-card">
-                                                        <div class="h5 mb-0">{{ last_30d_transactions }}</div>
-                                                        <div class="small">Last 30d</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-4">
-                                                    <div class="metric-card">
-                                                        <div class="h5 mb-0">{{ "%.1f"|format(success_rate) }}%</div>
-                                                        <div class="small">Success</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="text-center mt-3">
-                                                <a href="{{ url_for('client.transactions', service=service.name) }}" 
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-exchange-alt"></i> View Transactions
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="col-12">
-                                <div class="card shadow mb-4">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-cogs fa-3x text-gray-300 mb-3"></i>
-                                        <h5 class="text-gray-600">No Services Assigned</h5>
-                                        <p class="text-gray-500">
-                                            You don't have any services assigned to your account yet. 
-                                            Please contact your administrator to get services configured.
-                                        </p>
-                                        <a href="{{ url_for('client.api_keys') }}" class="btn btn-primary">
-                                            <i class="fas fa-key"></i> View API Keys
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Service Performance Summary -->
+                    <!-- Services Table -->
                     {% if services_data %}
                     <div class="row">
                         <div class="col-12">
                             <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Service Performance Summary</h6>
+                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-cogs"></i> My Services ({{ services_data|length }} total)
+                                    </h6>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="exportServices()">
+                                            <i class="fas fa-download"></i> Export
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshServices()">
+                                            <i class="fas fa-sync-alt"></i> Refresh
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive">
-                                        <table class="table table-bordered" width="100%" cellspacing="0">
-                                            <thead>
+                                        <table class="table table-bordered table-hover" width="100%" cellspacing="0" id="servicesTable">
+                                            <thead class="thead-light">
                                                 <tr>
-                                                    <th>Service</th>
+                                                    <th>Service Name</th>
+                                                    <th>Description</th>
                                                     <th>Total Transactions</th>
                                                     <th>Last 30 Days</th>
                                                     <th>Success Rate</th>
@@ -445,32 +358,160 @@
                                                 {% set success_rate = service_data.success_rate %}
                                                 <tr>
                                                     <td>
-                                                        <strong>{{ service.display_name }}</strong><br>
-                                                        <small class="text-muted">{{ service.name }}</small>
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="fas fa-cog text-primary me-2"></i>
+                                                            <div>
+                                                                <strong>{{ service.display_name }}</strong><br>
+                                                                <small class="text-muted">{{ service.name }}</small>
+                                                            </div>
+                                                        </div>
                                                     </td>
-                                                    <td>{{ total_transactions }}</td>
-                                                    <td>{{ last_30d_transactions }}</td>
                                                     <td>
-                                                        <span class="badge badge-{{ 'success' if success_rate >= 80 else 'warning' if success_rate >= 60 else 'danger' }}">
-                                                            {{ "%.1f"|format(success_rate) }}%
-                                                        </span>
+                                                        {% if service.description %}
+                                                            <span class="text-truncate d-inline-block" style="max-width: 200px;" 
+                                                                  title="{{ service.description }}">
+                                                                {{ service.description }}
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="text-muted">No description</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge badge-info">{{ total_transactions }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge badge-primary">{{ last_30d_transactions }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="progress me-2" style="width: 60px; height: 8px;">
+                                                                <div class="progress-bar bg-{{ 'success' if success_rate >= 80 else 'warning' if success_rate >= 60 else 'danger' }}" 
+                                                                     role="progressbar" style="width: {{ success_rate }}%"></div>
+                                                            </div>
+                                                            <span class="badge badge-{{ 'success' if success_rate >= 80 else 'warning' if success_rate >= 60 else 'danger' }}">
+                                                                {{ "%.1f"|format(success_rate) }}%
+                                                            </span>
+                                                        </div>
                                                     </td>
                                                     <td>
                                                         <span class="badge badge-{{ 'success' if service.is_active else 'danger' }}">
+                                                            <i class="fas fa-{{ 'check-circle' if service.is_active else 'times-circle' }}"></i>
                                                             {{ 'Active' if service.is_active else 'Inactive' }}
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <a href="{{ url_for('client.transactions', service=service.name) }}" 
-                                                           class="btn btn-primary btn-sm">
-                                                            <i class="fas fa-exchange-alt"></i> View Transactions
-                                                        </a>
+                                                        <div class="btn-group" role="group">
+                                                            <a href="{{ url_for('client.transactions', service=service.name) }}" 
+                                                               class="btn btn-primary btn-sm" title="View Transactions">
+                                                                <i class="fas fa-exchange-alt"></i>
+                                                            </a>
+                                                            <button class="btn btn-info btn-sm" 
+                                                                    onclick="showServiceDetails('{{ service.name }}', '{{ service.display_name }}', '{{ service.description or 'No description' }}', {{ total_transactions }}, {{ last_30d_transactions }}, {{ success_rate }}, {{ service.is_active|lower }})"
+                                                                    title="View Details">
+                                                                <i class="fas fa-info-circle"></i>
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                                 {% endfor %}
                                             </tbody>
                                         </table>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Statistics Summary -->
+                    <div class="row">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Total Services</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ services_data|length }}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-cogs fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Active Services</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                {{ services_data|selectattr('service.is_active')|list|length }}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Total Transactions</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                {{ services_data|sum(attribute='total_transactions') }}
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-exchange-alt fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Avg Success Rate</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                {{ "%.1f"|format((services_data|sum(attribute='success_rate') / services_data|length) if services_data else 0) }}%
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-cogs fa-3x text-gray-300 mb-3"></i>
+                                    <h5 class="text-gray-600">No Services Assigned</h5>
+                                    <p class="text-gray-500">
+                                        You don't have any services assigned to your account yet. 
+                                        Please contact your administrator to get services configured.
+                                    </p>
+                                    <a href="{{ url_for('client.api_keys') }}" class="btn btn-primary">
+                                        <i class="fas fa-key"></i> View API Keys
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -558,6 +599,119 @@
                 scrollTop: ($($anchor.attr('href')).offset().top)
             }, 1000, 'easeInOutExpo');
             e.preventDefault();
+        });
+
+        // Export services functionality
+        function exportServices() {
+            // Create CSV content
+            let csvContent = "Service Name,Display Name,Description,Total Transactions,Last 30 Days,Success Rate,Status\n";
+            
+            $('#servicesTable tbody tr').each(function() {
+                const row = $(this);
+                const serviceName = row.find('td:eq(0) small').text().trim();
+                const displayName = row.find('td:eq(0) strong').text().trim();
+                const description = row.find('td:eq(1) span').text().trim();
+                const totalTransactions = row.find('td:eq(2) .badge').text().trim();
+                const last30Days = row.find('td:eq(3) .badge').text().trim();
+                const successRate = row.find('td:eq(4) .badge').text().trim();
+                const status = row.find('td:eq(5) .badge').text().trim();
+                
+                csvContent += `"${serviceName}","${displayName}","${description}","${totalTransactions}","${last30Days}","${successRate}","${status}"\n`;
+            });
+            
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'services_export.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Refresh services functionality
+        function refreshServices() {
+            location.reload();
+        }
+
+        // Show service details modal
+        function showServiceDetails(name, displayName, description, totalTransactions, last30Days, successRate, isActive) {
+            const modalHtml = `
+                <div class="modal fade" id="serviceDetailsModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-cog"></i> Service Details
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Service Information</h6>
+                                        <p><strong>Name:</strong> ${name}</p>
+                                        <p><strong>Display Name:</strong> ${displayName}</p>
+                                        <p><strong>Description:</strong> ${description}</p>
+                                        <p><strong>Status:</strong> 
+                                            <span class="badge badge-${isActive ? 'success' : 'danger'}">
+                                                ${isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Performance Metrics</h6>
+                                        <p><strong>Total Transactions:</strong> ${totalTransactions}</p>
+                                        <p><strong>Last 30 Days:</strong> ${last30Days}</p>
+                                        <p><strong>Success Rate:</strong> ${successRate}%</p>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-${successRate >= 80 ? 'success' : successRate >= 60 ? 'warning' : 'danger'}" 
+                                                 style="width: ${successRate}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <a href="/client/transactions?service=${encodeURIComponent(name)}" class="btn btn-primary">
+                                    <i class="fas fa-exchange-alt"></i> View Transactions
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            $('#serviceDetailsModal').remove();
+            
+            // Add modal to body
+            $('body').append(modalHtml);
+            
+            // Show modal
+            $('#serviceDetailsModal').modal('show');
+        }
+
+        // Initialize DataTable for better table functionality
+        $(document).ready(function() {
+            if ($.fn.DataTable) {
+                $('#servicesTable').DataTable({
+                    "pageLength": 25,
+                    "order": [[ 2, "desc" ]], // Sort by total transactions
+                    "columnDefs": [
+                        { "orderable": false, "targets": 6 } // Disable sorting on Actions column
+                    ],
+                    "language": {
+                        "search": "Search services:",
+                        "lengthMenu": "Show _MENU_ services per page",
+                        "info": "Showing _START_ to _END_ of _TOTAL_ services",
+                        "infoEmpty": "No services found",
+                        "infoFiltered": "(filtered from _MAX_ total services)"
+                    }
+                });
+            }
         });
     </script>
 
