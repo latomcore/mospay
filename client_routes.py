@@ -11,7 +11,7 @@ from flask import (
     session,
 )
 from flask_login import login_user, logout_user, login_required, current_user
-from models import db, Client, Transaction, ApiLog
+from models import db, Client, Transaction, ApiLog, Service
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from datetime import datetime, timedelta
 from sqlalchemy import func, and_, or_
@@ -215,14 +215,14 @@ def transactions():
         search = request.args.get("search", "")
         
         # Build query
-        query = Transaction.query.filter_by(client_id=client_id)
+        query = Transaction.query.join(Service).filter_by(client_id=client_id)
         
         # Apply filters
         if status_filter:
             query = query.filter(Transaction.status == status_filter)
         
         if service_filter:
-            query = query.filter(Transaction.service_name == service_filter)
+            query = query.filter(Service.name == service_filter)
         
         if date_from:
             try:
@@ -256,7 +256,7 @@ def transactions():
         )
         
         # Get unique services for filter dropdown
-        services = db.session.query(Transaction.service_name).filter_by(
+        services = db.session.query(Service.name).join(Transaction).filter_by(
             client_id=client_id
         ).distinct().all()
         service_options = [s[0] for s in services if s[0]]
@@ -331,18 +331,18 @@ def services():
             
             total_transactions = Transaction.query.filter(
                 Transaction.client_id == client_id,
-                Transaction.service_name == service.name
+                Transaction.service_id == service.id
             ).count()
             
             last_30d_transactions = Transaction.query.filter(
                 Transaction.client_id == client_id,
-                Transaction.service_name == service.name,
+                Transaction.service_id == service.id,
                 func.date(Transaction.created_at) >= last_30_days
             ).count()
             
             successful_transactions = Transaction.query.filter(
                 Transaction.client_id == client_id,
-                Transaction.service_name == service.name,
+                Transaction.service_id == service.id,
                 func.date(Transaction.created_at) >= last_30_days,
                 Transaction.status == "completed"
             ).count()
