@@ -105,7 +105,7 @@
 
             <!-- Heading -->
             <div class="sidebar-heading">
-                Core Management
+                Management
             </div>
 
             <!-- Nav Item - Clients -->
@@ -129,11 +129,11 @@
                     <span>Transactions</span></a>
             </li>
 
-            <!-- Nav Item - Users -->
+            <!-- Nav Item - API Logs -->
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('admin.users') }}">
-                    <i class="fas fa-fw fa-user-shield"></i>
-                    <span>Users</span></a>
+                <a class="nav-link" href="{{ url_for('admin.api_logs') }}">
+                    <i class="fas fa-fw fa-list"></i>
+                    <span>API Logs</span></a>
             </li>
 
             <!-- Divider -->
@@ -197,30 +197,8 @@
             <!-- Nav Item - Monitoring Dashboard -->
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('admin.monitoring_dashboard') }}">
-                    <i class="fas fa-fw fa-desktop"></i>
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Monitoring Dashboard</span></a>
-            </li>
-
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                Reports & Export
-            </div>
-
-            <!-- Nav Item - Bulk Export -->
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('admin.bulk_export') }}">
-                    <i class="fas fa-fw fa-download"></i>
-                    <span>Bulk Export</span></a>
-            </li>
-
-            <!-- Nav Item - Performance Summary -->
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('admin.performance_summary_report') }}">
-                    <i class="fas fa-fw fa-chart-bar"></i>
-                    <span>Performance Summary</span></a>
             </li>
 
             <!-- Divider -->
@@ -245,10 +223,58 @@
             <div class="sidebar-heading">
                 Bulk Operations
             </div>
+
+            <!-- Nav Item - Bulk Operations -->
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('admin.bulk_operations') }}">
                     <i class="fas fa-fw fa-tasks"></i>
                     <span>Bulk Operations</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Reports & Export
+            </div>
+
+            <!-- Nav Item - Bulk Export -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.bulk_export') }}">
+                    <i class="fas fa-fw fa-download"></i>
+                    <span>Bulk Export</span></a>
+            </li>
+
+            <!-- Nav Item - Performance Summary -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.performance_summary_report') }}">
+                    <i class="fas fa-fw fa-chart-bar"></i>
+                    <span>Performance Report</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                System
+            </div>
+
+            <!-- Nav Item - Users -->
+            {% if session.get('role') == 'super_admin' %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.users') }}">
+                    <i class="fas fa-fw fa-user-shield"></i>
+                    <span>Users</span></a>
+            </li>
+            {% endif %}
+
+            <!-- Nav Item - Profile -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('auth.profile') }}">
+                    <i class="fas fa-fw fa-user"></i>
+                    <span>Profile</span></a>
             </li>
 
             <!-- Divider -->
