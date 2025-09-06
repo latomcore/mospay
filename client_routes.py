@@ -204,6 +204,11 @@ def transactions():
     """Client transaction management"""
     try:
         client_id = session.get('client_id')
+        client_obj = Client.query.get(client_id)
+        if not client_obj:
+            flash("Client not found", "error")
+            return redirect(url_for("client.login"))
+            
         page = request.args.get("page", 1, type=int)
         per_page = 20
         
