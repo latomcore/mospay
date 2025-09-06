@@ -57,8 +57,10 @@
         
         .bg-login-image {
             background: url('{{ url_for("static", filename="images/mospay_image_blue_background.png") }}') center center;
-            background-size: cover;
+            background-size: contain;
             background-repeat: no-repeat;
+            background-position: center;
+            min-height: 100vh;
         }
     </style>
 </head>

@@ -21,6 +21,16 @@
     <!-- Custom styles for this template-->
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
 
+    <style>
+        .bg-login-image {
+            background: url('{{ url_for("static", filename="images/mospay_image_blue_background.png") }}') center center;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            min-height: 100vh;
+        }
+    </style>
+
 </head>
 
 <body class="bg-gradient-primary">
