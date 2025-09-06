@@ -256,8 +256,8 @@ def transactions():
         )
         
         # Get unique services for filter dropdown
-        services = db.session.query(Service.name).join(Transaction).filter_by(
-            client_id=client_id
+        services = db.session.query(Service.name).join(Transaction).filter(
+            Transaction.client_id == client_id
         ).distinct().all()
         service_options = [s[0] for s in services if s[0]]
         

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="MosPay - Client Services">
+    <meta name="author" content="MosPay">
+
+    <title>My Services - {{ client.company_name }} | MosPay</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"
+        type="text/css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
+
+    <style>
+        .sidebar {
+            background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+        }
+
+        .sidebar-brand {
+            color: #fff !important;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .nav-link:hover {
+            color: #fff !important;
+        }
+
+        .nav-link.active {
+            color: #fff !important;
+        }
+
+        .card {
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+        }
+
+        /* Ensure sidebar is visible and properly styled */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+            background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+        }
+
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 48px);
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .sidebar .nav-link {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .sidebar .nav-link:hover {
+            color: #fff !important;
+        }
+
+        .sidebar .nav-link.active {
+            color: #fff !important;
+        }
+
+        .sidebar-heading {
+            font-size: .75rem;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .sidebar-brand {
+            color: #fff !important;
+        }
+
+        .sidebar-divider {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        @media (max-width: 767.98px) {
+            .sidebar {
+                top: 5rem;
+            }
+        }
+
+        /* Content wrapper adjustments */
+        #content-wrapper {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            #content-wrapper {
+                margin-left: 14rem;
+            }
+        }
+
+        /* Sidebar toggled state */
+        body.sidebar-toggled .sidebar {
+            margin-left: -14rem;
+        }
+
+        body.sidebar-toggled #content-wrapper {
+            margin-left: 0;
+        }
+
+        @media (max-width: 767.98px) {
+            body.sidebar-toggled .sidebar {
+                margin-left: 0;
+            }
+        }
+
+        .service-card {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .service-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body id="page-top" class="sidebar-toggled">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('client.dashboard') }}">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">MosPay</div>
+            </a>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider my-0">
+
+            <!-- Nav Item - Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('client.dashboard') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Transactions
+            </div>
+
+            <!-- Nav Item - Transactions -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('client.transactions') }}">
+                    <i class="fas fa-fw fa-exchange-alt"></i>
+                    <span>All Transactions</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Services
+            </div>
+
+            <!-- Nav Item - Services -->
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('client.services') }}">
+                    <i class="fas fa-fw fa-cogs"></i>
+                    <span>My Services</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                API & Integration
+            </div>
+
+            <!-- Nav Item - API Keys -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('client.api_keys') }}">
+                    <i class="fas fa-fw fa-key"></i>
+                    <span>API Keys</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Account
+            </div>
+
+            <!-- Nav Item - Settings -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('client.settings') }}">
+                    <i class="fas fa-fw fa-cog"></i>
+                    <span>Settings</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Sidebar Toggler (Sidebar) -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+
+        </ul>
+        <!-- End of Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+                    <!-- Sidebar Toggle (Topbar) -->
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <!-- Topbar Navbar -->
+                    <ul class="navbar-nav ml-auto">
+
+                        <!-- Nav Item - User Information -->
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ client.company_name }}</span>
+                                <i class="fas fa-user-circle fa-2x text-gray-300"></i>
+                            </a>
+                            <!-- Dropdown - User Information -->
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="{{ url_for('client.settings') }}">
+                                    <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Settings
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{{ url_for('client.logout') }}">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+
+                    </ul>
+
+                </nav>
+                <!-- End of Topbar -->
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    {% if category == 'success' %}
+                                        <i class="fas fa-check-circle"></i>
+                                    {% elif category == 'error' %}
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    {% elif category == 'info' %}
+                                        <i class="fas fa-info-circle"></i>
+                                    {% endif %}
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">My Services</h1>
+                        <div class="text-muted">
+                            <small>App ID: {{ client.app_id }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Content Row -->
+                    <div class="row">
+                        {% if services_data %}
+                            {% for service_data in services_data %}
+                                {% set service = service_data.service %}
+                                {% set total_transactions = service_data.total_transactions %}
+                                {% set last_30d_transactions = service_data.last_30d_transactions %}
+                                {% set success_rate = service_data.success_rate %}
+                                
+                                <div class="col-lg-6 col-xl-4">
+                                    <div class="card service-card shadow mb-4">
+                                        <div class="card-header py-3">
+                                            <h6 class="m-0 font-weight-bold text-primary">
+                                                <i class="fas fa-cog"></i> {{ service.display_name }}
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <label class="font-weight-bold">Service Name:</label>
+                                                <div>{{ service.name }}</div>
+                                            </div>
+                                            
+                                            {% if service.description %}
+                                            <div class="mb-3">
+                                                <label class="font-weight-bold">Description:</label>
+                                                <div>{{ service.description }}</div>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <div class="mb-3">
+                                                <label class="font-weight-bold">Service URL:</label>
+                                                <div class="text-break">
+                                                    <a href="{{ service.service_url }}" target="_blank" class="text-primary">
+                                                        {{ service.service_url }}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="font-weight-bold">Status:</label>
+                                                <span class="badge badge-{{ 'success' if service.is_active else 'danger' }}">
+                                                    {{ 'Active' if service.is_active else 'Inactive' }}
+                                                </span>
+                                            </div>
+                                            
+                                            <hr>
+                                            
+                                            <!-- Performance Metrics -->
+                                            <div class="row text-center">
+                                                <div class="col-4">
+                                                    <div class="metric-card">
+                                                        <div class="h5 mb-0">{{ total_transactions }}</div>
+                                                        <div class="small">Total</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="metric-card">
+                                                        <div class="h5 mb-0">{{ last_30d_transactions }}</div>
+                                                        <div class="small">Last 30d</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="metric-card">
+                                                        <div class="h5 mb-0">{{ "%.1f"|format(success_rate) }}%</div>
+                                                        <div class="small">Success</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="text-center mt-3">
+                                                <a href="{{ url_for('client.transactions', service=service.name) }}" 
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-exchange-alt"></i> View Transactions
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12">
+                                <div class="card shadow mb-4">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-cogs fa-3x text-gray-300 mb-3"></i>
+                                        <h5 class="text-gray-600">No Services Assigned</h5>
+                                        <p class="text-gray-500">
+                                            You don't have any services assigned to your account yet. 
+                                            Please contact your administrator to get services configured.
+                                        </p>
+                                        <a href="{{ url_for('client.api_keys') }}" class="btn btn-primary">
+                                            <i class="fas fa-key"></i> View API Keys
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Service Performance Summary -->
+                    {% if services_data %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Service Performance Summary</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Service</th>
+                                                    <th>Total Transactions</th>
+                                                    <th>Last 30 Days</th>
+                                                    <th>Success Rate</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for service_data in services_data %}
+                                                {% set service = service_data.service %}
+                                                {% set total_transactions = service_data.total_transactions %}
+                                                {% set last_30d_transactions = service_data.last_30d_transactions %}
+                                                {% set success_rate = service_data.success_rate %}
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ service.display_name }}</strong><br>
+                                                        <small class="text-muted">{{ service.name }}</small>
+                                                    </td>
+                                                    <td>{{ total_transactions }}</td>
+                                                    <td>{{ last_30d_transactions }}</td>
+                                                    <td>
+                                                        <span class="badge badge-{{ 'success' if success_rate >= 80 else 'warning' if success_rate >= 60 else 'danger' }}">
+                                                            {{ "%.1f"|format(success_rate) }}%
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge badge-{{ 'success' if service.is_active else 'danger' }}">
+                                                            {{ 'Active' if service.is_active else 'Inactive' }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ url_for('client.transactions', service=service.name) }}" 
+                                                           class="btn btn-primary btn-sm">
+                                                            <i class="fas fa-exchange-alt"></i> View Transactions
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
+                <!-- /.container-fluid -->
+
+            </div>
+            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; MosPay 2025</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="https://cdn.jsdelivr.net/npm/jquery.easing@1.4.1/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for this template-->
+    <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+
+    <script>
+        // Sidebar toggle functionality
+        $("#sidebarToggle, #sidebarToggleTop").on('click', function(e) {
+            $("body").toggleClass("sidebar-toggled");
+            $(".sidebar").toggleClass("toggled");
+            if ($(".sidebar").hasClass("toggled")) {
+                $('.sidebar .collapse').collapse('hide');
+            };
+        });
+
+        // Close any open menu accordions when window is resized below 768px
+        $(window).resize(function() {
+            if ($(window).width() < 768) {
+                $('.sidebar .collapse').collapse('hide');
+            };
+        });
+
+        // Prevent the content wrapper from scrolling when the fixed side navigation is hovered over
+        $('body.fixed-nav .sidebar').on('mousewheel DOMMouseScroll wheel', function(e) {
+            if ($(window).width() > 768) {
+                var e0 = e.originalEvent,
+                    delta = e0.wheelDelta || -e0.detail;
+                this.scrollTop += (delta < 0 ? 1 : -1) * 30;
+                e.preventDefault();
+            }
+        });
+
+        // Scroll to top button appear
+        $(document).on('scroll', function() {
+            var scrollDistance = $(this).scrollTop();
+            if (scrollDistance > 100) {
+                $('.scroll-to-top').fadeIn();
+            } else {
+                $('.scroll-to-top').fadeOut();
+            }
+        });
+
+        // Smooth scrolling using jQuery easing
+        $(document).on('click', 'a.scroll-to-top', function(e) {
+            var $anchor = $(this);
+            $('html, body').stop().animate({
+                scrollTop: ($($anchor.attr('href')).offset().top)
+            }, 1000, 'easeInOutExpo');
+            e.preventDefault();
+        });
+    </script>
+
+</body>
+
+</html>
