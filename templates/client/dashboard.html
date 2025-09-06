@@ -125,38 +125,38 @@
             body.sidebar-toggled .sidebar {
                 margin-left: 0;
             }
-            
+
             .container-fluid {
                 padding: 0.5rem;
             }
-            
+
             .card {
                 margin-bottom: 1rem;
             }
-            
+
             .table-responsive {
                 font-size: 0.85rem;
             }
-            
+
             .btn-sm {
                 padding: 0.25rem 0.5rem;
                 font-size: 0.75rem;
             }
         }
-        
+
         @media (max-width: 576px) {
             .container-fluid {
                 padding: 0.25rem;
             }
-            
+
             .card-body {
                 padding: 1rem;
             }
-            
+
             .h3 {
                 font-size: 1.5rem;
             }
-            
+
             .breadcrumb {
                 font-size: 0.8rem;
             }
@@ -173,14 +173,14 @@
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('client.dashboard') }}">
-                <div class="sidebar-brand-icon">
-                    <img src="{{ url_for('static', filename='images/mospay_image_white_background.png') }}" 
-                         alt="MOS Technologies" 
-                         style="max-height: 40px; width: auto;">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center"
+                href="{{ url_for('client.dashboard') }}">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-credit-card"></i>
                 </div>
                 <div class="sidebar-brand-text mx-3">MosPay</div>
             </a>
+
 
             <!-- Divider -->
             <hr class="sidebar-divider my-0">
@@ -284,7 +284,8 @@
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ client.company_name }}</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ client.company_name
+                                    }}</span>
                                 <i class="fas fa-user-circle fa-2x text-gray-300"></i>
                             </a>
                             <!-- Dropdown - User Information -->
@@ -312,23 +313,24 @@
 
                     <!-- Flash Messages -->
                     {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                                    {% if category == 'success' %}
-                                        <i class="fas fa-check-circle"></i>
-                                    {% elif category == 'error' %}
-                                        <i class="fas fa-exclamation-circle"></i>
-                                    {% elif category == 'warning' %}
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                    {% elif category == 'info' %}
-                                        <i class="fas fa-info-circle"></i>
-                                    {% endif %}
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            {% endfor %}
+                    {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+                        role="alert">
+                        {% if category == 'success' %}
+                        <i class="fas fa-check-circle"></i>
+                        {% elif category == 'error' %}
+                        <i class="fas fa-exclamation-circle"></i>
+                        {% elif category == 'warning' %}
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {% elif category == 'info' %}
+                        <i class="fas fa-info-circle"></i>
                         {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
                     {% endwith %}
 
                     <!-- Page Heading -->
@@ -350,7 +352,8 @@
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                                 Total Transactions</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_transactions }}</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_transactions }}
+                                            </div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-exchange-alt fa-2x text-gray-300"></i>
@@ -368,7 +371,8 @@
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                                 Today's Transactions</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ today_transactions }}</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ today_transactions }}
+                                            </div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
@@ -386,7 +390,8 @@
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                                 Success Rate (30d)</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ success_rate }}%</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ success_rate }}%
+                                            </div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-percentage fa-2x text-gray-300"></i>
@@ -404,7 +409,8 @@
                                         <div class="col mr-2">
                                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                                 Revenue (30d)</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(total_revenue) }}</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{
+                                                "%.2f"|format(total_revenue) }}</div>
                                         </div>
                                         <div class="col-auto">
                                             <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -423,7 +429,8 @@
                         <div class="col-xl-8 col-lg-7">
                             <div class="card shadow mb-4">
                                 <!-- Card Header - Dropdown -->
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <div
+                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                                     <h6 class="m-0 font-weight-bold text-primary">Transaction Volume (Last 30 Days)</h6>
                                 </div>
                                 <!-- Card Body -->
@@ -439,44 +446,47 @@
                         <div class="col-xl-4 col-lg-5">
                             <div class="card shadow mb-4">
                                 <!-- Card Header -->
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <div
+                                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                                     <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
-                                    <a href="{{ url_for('client.transactions') }}" class="btn btn-sm btn-primary">View All</a>
+                                    <a href="{{ url_for('client.transactions') }}" class="btn btn-sm btn-primary">View
+                                        All</a>
                                 </div>
                                 <!-- Card Body -->
                                 <div class="card-body">
                                     {% if recent_transactions %}
-                                        {% for transaction in recent_transactions %}
-                                        <div class="d-flex align-items-center mb-3">
-                                            <div class="mr-3">
-                                                {% if transaction.status == 'completed' %}
-                                                    <i class="fas fa-check-circle text-success"></i>
-                                                {% elif transaction.status == 'failed' %}
-                                                    <i class="fas fa-times-circle text-danger"></i>
-                                                {% elif transaction.status == 'pending' %}
-                                                    <i class="fas fa-clock text-warning"></i>
-                                                {% else %}
-                                                    <i class="fas fa-question-circle text-secondary"></i>
-                                                {% endif %}
+                                    {% for transaction in recent_transactions %}
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="mr-3">
+                                            {% if transaction.status == 'completed' %}
+                                            <i class="fas fa-check-circle text-success"></i>
+                                            {% elif transaction.status == 'failed' %}
+                                            <i class="fas fa-times-circle text-danger"></i>
+                                            {% elif transaction.status == 'pending' %}
+                                            <i class="fas fa-clock text-warning"></i>
+                                            {% else %}
+                                            <i class="fas fa-question-circle text-secondary"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="text-xs font-weight-bold text-gray-800">
+                                                {{ transaction.unique_id[:8] }}...
                                             </div>
-                                            <div class="flex-grow-1">
-                                                <div class="text-xs font-weight-bold text-gray-800">
-                                                    {{ transaction.unique_id[:8] }}...
-                                                </div>
-                                                <div class="text-xs text-gray-600">
-                                                    ${{ "%.2f"|format(transaction.amount) }} - {{ transaction.status.title() }}
-                                                </div>
-                                            </div>
-                                            <div class="text-xs text-gray-500">
-                                                {{ transaction.created_at.strftime('%m/%d %H:%M') }}
+                                            <div class="text-xs text-gray-600">
+                                                ${{ "%.2f"|format(transaction.amount) }} - {{ transaction.status.title()
+                                                }}
                                             </div>
                                         </div>
-                                        {% endfor %}
+                                        <div class="text-xs text-gray-500">
+                                            {{ transaction.created_at.strftime('%m/%d %H:%M') }}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
                                     {% else %}
-                                        <div class="text-center text-muted">
-                                            <i class="fas fa-inbox fa-2x mb-2"></i>
-                                            <p>No recent transactions</p>
-                                        </div>
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                                        <p>No recent transactions</p>
+                                    </div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -496,17 +506,20 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <a href="{{ url_for('client.transactions') }}" class="btn btn-primary btn-block w-100">
+                                            <a href="{{ url_for('client.transactions') }}"
+                                                class="btn btn-primary btn-block w-100">
                                                 <i class="fas fa-exchange-alt"></i> View Transactions
                                             </a>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <a href="{{ url_for('client.services') }}" class="btn btn-info btn-block w-100">
+                                            <a href="{{ url_for('client.services') }}"
+                                                class="btn btn-info btn-block w-100">
                                                 <i class="fas fa-cogs"></i> Manage Services
                                             </a>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <a href="{{ url_for('client.api_keys') }}" class="btn btn-success btn-block w-100">
+                                            <a href="{{ url_for('client.api_keys') }}"
+                                                class="btn btn-success btn-block w-100">
                                                 <i class="fas fa-key"></i> API Keys
                                             </a>
                                         </div>
@@ -610,24 +623,30 @@
 
     <script>
         // Sidebar toggle functionality
-        $("#sidebarToggle, #sidebarToggleTop").on('click', function(e) {
+        $("#sidebarToggle, #sidebarToggleTop").on('click', function (e)
+        {
             $("body").toggleClass("sidebar-toggled");
             $(".sidebar").toggleClass("toggled");
-            if ($(".sidebar").hasClass("toggled")) {
+            if ($(".sidebar").hasClass("toggled"))
+            {
                 $('.sidebar .collapse').collapse('hide');
             };
         });
 
         // Close any open menu accordions when window is resized below 768px
-        $(window).resize(function() {
-            if ($(window).width() < 768) {
+        $(window).resize(function ()
+        {
+            if ($(window).width() < 768)
+            {
                 $('.sidebar .collapse').collapse('hide');
             };
         });
 
         // Prevent the content wrapper from scrolling when the fixed side navigation is hovered over
-        $('body.fixed-nav .sidebar').on('mousewheel DOMMouseScroll wheel', function(e) {
-            if ($(window).width() > 768) {
+        $('body.fixed-nav .sidebar').on('mousewheel DOMMouseScroll wheel', function (e)
+        {
+            if ($(window).width() > 768)
+            {
                 var e0 = e.originalEvent,
                     delta = e0.wheelDelta || -e0.detail;
                 this.scrollTop += (delta < 0 ? 1 : -1) * 30;
@@ -636,17 +655,21 @@
         });
 
         // Scroll to top button appear
-        $(document).on('scroll', function() {
+        $(document).on('scroll', function ()
+        {
             var scrollDistance = $(this).scrollTop();
-            if (scrollDistance > 100) {
+            if (scrollDistance > 100)
+            {
                 $('.scroll-to-top').fadeIn();
-            } else {
+            } else
+            {
                 $('.scroll-to-top').fadeOut();
             }
         });
 
         // Smooth scrolling using jQuery easing
-        $(document).on('click', 'a.scroll-to-top', function(e) {
+        $(document).on('click', 'a.scroll-to-top', function (e)
+        {
             var $anchor = $(this);
             $('html, body').stop().animate({
                 scrollTop: ($($anchor.attr('href')).offset().top)
@@ -659,34 +682,34 @@
         var transactionChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: {{ chart_data | map(attribute='date') | list | tojson }},
-                datasets: [{
-                    label: 'Transactions',
-                    data: {{ chart_data | map(attribute='transactions') | list | tojson }},
-                    borderColor: '#4e73df',
-                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
+                labels: {{ chart_data | map(attribute = 'date') | list | tojson }},
+        datasets: [{
+            label: 'Transactions',
+            data: {{ chart_data | map(attribute = 'transactions') | list | tojson }},
+            borderColor: '#4e73df',
+            backgroundColor: 'rgba(78, 115, 223, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
                 }]
             },
-            options: {
-                responsive: true,
+        options: {
+            responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
+                    scales: {
+                y: {
+                    beginAtZero: true,
                         ticks: {
-                            stepSize: 1
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
+                        stepSize: 1
                     }
                 }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
             }
+        }
         });
     </script>
 
