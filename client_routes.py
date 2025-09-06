@@ -247,8 +247,8 @@ def transactions():
             query = query.filter(
                 or_(
                     Transaction.unique_id.ilike(f"%{search}%"),
-                    Transaction.reference.ilike(f"%{search}%"),
-                    Transaction.customer_name.ilike(f"%{search}%")
+                    Transaction.mobile_number.ilike(f"%{search}%"),
+                    Transaction.device_id.ilike(f"%{search}%")
                 )
             )
         
